@@ -1,0 +1,135 @@
+Okay, currency and inventory, and trading them between characters
+stats, hx, harm, moves, special moves, improvement.
+
+About inventory:
+	i think gear and equipment are the only distinctions - things you use vs things you wear, tho because of the survival aspect maybe a simple “backpack” for mundane things like food, water, medical supplies.
+
+About HX:
+	hx is basically a measure of how well you know someone
+	the only info really needed is the name of the character and the number ( -4 to +4 ) of hx with that character
+	It also should automaticaly reset to HX+1 if it reaches Hx+4 or Hx-4 with another character
+
+About harm countdown:
+	its a little confusing lol, i think they wanted to be poetic with the “countdown to death” idea. 
+
+	for each harm you take you mark a section of the clock 
+
+	1 harm is 12am to 3am
+	2  is 3-6
+	3 is 6-9
+	4 is 9-10
+	5 is 10-11
+	6 is 11-12 
+
+	if the clock is filled you die
+	harm before 6 heals by itself 
+
+	harm after 9 gets worse with time unless stabilized, im not sure if theres a way to add color in anyway but maybe a distinction for that would be nice
+	
+	im not sure what you mean by a harm counter without one of the effects. there is d-harm, s-harm, and Ψ-harm, but those are mostly just descriptors for the type of harm taken/why its being taken. effects like crippled are more like conditions affecting a character, they can be short or long term. [meaning is kinda like normal dmg, and conditions are optional
+
+About improvement:
+	for improvement, the space before is for marking, you can only have each improvement once.
+
+About highlight:
+	you have two highlighted stats, usually in campaigns the mc chooses one and then another player chooses the other. since this is a larger came i will choose one and then the player themself will choose the other. you get to mark an xp every time you roll with a highlighted stat.
+
+
+{
+Commands:
+	/createsheet [character name] - Starts a new sheet for your user; if already exists, will return an error
+									Will ask for you to react to select your playbook, then stats options and your moves
+	/deletesheet - Deletes existing sheet for your user; will confirm the operation to avoid accidents
+	/checksheet [@user] - Show the following example sheet; you can tag an user to check their sheet
+	/highlights - Show your highlights; can react to set or remove highlights
+	/hxinfo [@user] - Checks your HX info; if a user is provided, it will list HX only towards specified character
+	/hxadjust [@user] [number] | [@user] [number] | [@user] [number]... - Sets your HX with someone; Can set multiple HX with one command by separating with "|"; Values go only from -4 to 4
+	/harminfo - Checks your harm info; Can react to set or remove conditions
+	/takeharm [number] - Take specified amount of harm; Bot will send your harm info; If its going to kill you, will inform you and ask to confirm
+	/healharm [number] - Heal specified amount of harm; Bot will send your harm info
+	/fullheal - Heal all your harms, not including conditions;
+	/fullhealc - Heal all your harms, including conditions;
+	/moves - Lists all moves
+	/mymoves - Lists your moves
+	/learnmoves [movename] | [movename]... - Adds moves to your sheet; Can learn multiple moves with one command by separating with "|"
+	/removemoves [movename] | [movename]... - Removes moves from your sheet; Will ask for confirmation to avoid accidents; Can remove multiple moves with one command by separating with "|"
+	/getexp [number] - Gets [number] amount of xp; gives "improvement points" automaticaly
+	/improve - Lists improvement options; Reacts to improve; return error if you cant improve at the moment
+	/removeimprovement [improvementname] | [improvementname]... - Remove your improvements; Will ask for confirmation to avoid accidents; Can remove multiple improvements with one command by separating with "|"
+	/givebanter [@user] [number] - Gives [number] amount of banter to another user
+	/usebanter [number] - Spends [number] amount of banter
+	[inventory, trade and give commands, will be defined after I work out how inventory will out on the code]
+}
+
+
+Name: Dou
+Playbook: THE ANGEL
+
+STATS ---------------
+:white_large_square: Cool       [+2]
+:white_large_square: Hard       [+0]
+:white_large_square: Hot         [+1]
+:white_check_mark: Sharp    [+3]
+:white_large_square: Weird     [-1]
+
+[:white_check_mark: indicates highlight]
+
+HX ------------------
+(+3) player2
+(-2) player3
+[HX is towards other players, and it goes from -4 to +4;
+doesnt show players which HX is 0]
+
+[Page 3]
+HARM ----------------
+[Progress bar representing the clock, smth like the following]
+
+                             3                 6                9   10  11  :skull_crossbones:       
+  12am  |:green_square::green_square::green_square::green_square::green_square::green_square::yellow_square::yellow_square::yellow_square::orange_square::orange_square::red_square:|  12pm 
+
+Crippled
+
+[status shows here; 
+status include: stabilized, shattered, crippled, disfigured, broken; 
+they are reflected on stats;]
+
+[Page 3]
+MOVES ---------------
+Sixth sense
+Infirmary
+[+ basic moves]
+
+SPECIAL MOVES -------
+If you and another character have sex, your Hx with them on your sheet goes immediately to +3, and they immediately get +1 to their Hx with you on their sheet. If that brings their Hx with you to +4, they reset it to +1 instead, as usual, and so mark experience.
+
+[Page 4]
+IMPROVEMENT ---------
+Exp: :red_square::red_square::white_large_square::white_large_square::white_large_square: [emojis filling as you get exp]
+
+:white_check_mark: get +1 sharp (max sharp+3)
+:white_check_mark: get +1 cool (max cool+2)
+:white_large_square: get +1 hard (max hard+2)
+:white_large_square: get +1 hard (max hard+2)
+:white_large_square: get +1 weird (max weird+2)
+:white_check_mark: get a new angel move
+:white_large_square: get a new angel move
+:white_large_square: get 2 gigs (detail) and moonlighting
+:white_large_square: get a move from another playbook
+:white_large_square: get a move from another playbook
+----------------------------------
+:white_large_square: get +1 to any stat (max stat+3)
+:white_large_square: retire your character (to safety)
+:white_large_square: create a second character to play
+:white_large_square: change your character to a new type
+:white_large_square: choose 3 basic moves and advance them.
+:white_large_square: advance the other 4 basic moves.
+
+[Page 5]
+GEAR --------------
+.38 revolver
+A piece worth 1-armor
+
+BACKPACK ------------
+Banter: 3 [always first]
+Angel kit
+Oddments worth 1-barter
