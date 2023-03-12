@@ -68,12 +68,13 @@ Playbook: THE ANGEL
 STATS ---------------
 :white_large_square: Cool       [+2]
 :white_large_square: Hard       [+0]
-:white_large_square: Hot         [+1]
+:white_large_square: Hot         [+1]	
 :white_check_mark: Sharp    [+3]
 :white_large_square: Weird     [-1]
 
 [:white_check_mark: indicates highlight]
 
+[Page 2]
 HX ------------------
 (+3) player2
 (-2) player3
@@ -93,7 +94,7 @@ Crippled
 status include: stabilized, shattered, crippled, disfigured, broken; 
 they are reflected on stats;]
 
-[Page 3]
+[Page 4]
 MOVES ---------------
 Sixth sense
 Infirmary
@@ -102,7 +103,7 @@ Infirmary
 SPECIAL MOVES -------
 If you and another character have sex, your Hx with them on your sheet goes immediately to +3, and they immediately get +1 to their Hx with you on their sheet. If that brings their Hx with you to +4, they reset it to +1 instead, as usual, and so mark experience.
 
-[Page 4]
+[Page 5]
 IMPROVEMENT ---------
 Exp: :red_square::red_square::white_large_square::white_large_square::white_large_square: [emojis filling as you get exp]
 
@@ -124,7 +125,7 @@ Exp: :red_square::red_square::white_large_square::white_large_square::white_larg
 :white_large_square: choose 3 basic moves and advance them.
 :white_large_square: advance the other 4 basic moves.
 
-[Page 5]
+[Page 6]
 GEAR --------------
 .38 revolver
 A piece worth 1-armor
@@ -133,3 +134,15 @@ BACKPACK ------------
 Banter: 3 [always first]
 Angel kit
 Oddments worth 1-barter
+
+
+
+
+
+
+
+
+
+
+
+Discord bot config
