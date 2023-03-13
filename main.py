@@ -45,11 +45,9 @@ async def checksheet(ctx):
         ImprovementPage(),
         InventoryPage()
     ]
-    page_number = 0
     pageManager = PageManager("Name: Dou", "Playbook: The Angel", pages)
 
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
-    embed.set_footer(text=f'Page {page_number + 1} of {len(pages)}')
     msg = await ctx.reply(embed=embed)
 
     await msg.add_reaction(EMOJI_LEFT) # left arrow
@@ -63,13 +61,11 @@ async def checksheet(ctx):
             reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
 
             if str(reaction.emoji) == EMOJI_LEFT:
-                page_number = (page_number - 1) % len(pages)
+                pageManager.turn_page(-1)
             elif str(reaction.emoji) == EMOJI_RIGHT:
-                page_number = (page_number + 1) % len(pages)
+                pageManager.turn_page(1)
 
-            embed_dict = pages[page_number].to_dict()
-            embed = dc.Embed.from_dict(embed_dict)
-            embed.set_footer(text=f'Page {page_number + 1} of {len(pages)}')
+            embed = dc.Embed.from_dict(pageManager.get_embed_dict())
             await msg.edit(embed=embed)
             await msg.remove_reaction(reaction, user)
         except:

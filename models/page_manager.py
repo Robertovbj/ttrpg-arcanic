@@ -1,5 +1,3 @@
-from .page import Page
-
 class PageManager:
     def __init__(self, title, description, pages, thumbnail='https://i.imgur.com/fAi8DsQ.png'):
         self.title = title
@@ -26,6 +24,9 @@ class PageManager:
             'color': self.color,
             'thumbnail': {
                 'url': self.thumbnail
+            },
+            'footer': {
+                'text': f'Page {self.current_page_index + 1} of {len(self.pages)}'
             }
         }
         return {**manager_dict, **current_page.to_dict()}
