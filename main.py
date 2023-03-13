@@ -74,10 +74,6 @@ async def checksheet(ctx):
 @bot.command()
 async def snow(ctx):
     user_id = str(ctx.author.id)
-    await ctx.reply(f'{ctx.message.author.mention} {user_id}')
-
-@bot.command()
-async def test(ctx):
-    print(PageManager('teste', [HxPage()]).get_embed_dict())
+    await ctx.reply(f'**teste** {ctx.message.author.mention} {user_id}')
 
 bot.run( TOKEN )
