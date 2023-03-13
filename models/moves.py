@@ -3,7 +3,7 @@ from .field import Field
 
 class MovesPage(Page):
     def __init__(self):
-        super().__init__("Moves")
+        super().__init__()
         self.fields = [
             Field(f"ANGEL MOVES", f"""Sixth sense
             Infirmary"""),

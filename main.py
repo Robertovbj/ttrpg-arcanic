@@ -6,6 +6,7 @@ from models.hx import HxPage
 from models.moves import MovesPage
 from models.improvements import ImprovementPage
 from models.inventory import InventoryPage
+from models.page_manager import PageManager
 from config import TOKEN  # Import the bot token from the config module
 from emojis import EMOJI_LEFT, EMOJI_RIGHT 
 
@@ -35,6 +36,7 @@ bot = commands.Bot( command_prefix='!', intents=intents )
 
 @bot.command()
 async def checksheet(ctx):
+    
     pages = [
         StatsPage(),
         HxPage(),
@@ -44,10 +46,11 @@ async def checksheet(ctx):
         InventoryPage()
     ]
     page_number = 0
+    pageManager = PageManager("Name: Dou", "Playbook: The Angel", pages)
 
-    embed = dc.Embed.from_dict(pages[page_number].to_dict())
+    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     embed.set_footer(text=f'Page {page_number + 1} of {len(pages)}')
-    msg = await ctx.send(embed=embed)
+    msg = await ctx.reply(embed=embed)
 
     await msg.add_reaction(EMOJI_LEFT) # left arrow
     await msg.add_reaction(EMOJI_RIGHT) # right arrow
@@ -71,5 +74,14 @@ async def checksheet(ctx):
             await msg.remove_reaction(reaction, user)
         except:
             break
+
+@bot.command()
+async def snow(ctx):
+    user_id = str(ctx.author.id)
+    await ctx.reply(f'{ctx.message.author.mention} {user_id}')
+
+@bot.command()
+async def test(ctx):
+    print(PageManager('teste', [HxPage()]).get_embed_dict())
 
 bot.run( TOKEN )

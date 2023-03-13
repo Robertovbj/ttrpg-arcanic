@@ -4,7 +4,7 @@ from emojis import GREEN_SQUARE, YELLOW_SQUARE, ORANGE_SQUARE, RED_SQUARE, SKULL
 
 class HarmPage(Page):
     def __init__(self):
-        super().__init__("Harm")
+        super().__init__()
         self.fields = [
             # Field("HARM", "-" * 14 + "3" + "-" * 8 + "6" + "-" * 8 + "9" + "-10-11-" + f"""{SKULL_CROSSBONES}-------
             # 12am |{GREEN_SQUARE}{GREEN_SQUARE}{GREEN_SQUARE}{GREEN_SQUARE}{GREEN_SQUARE}{GREEN_SQUARE}{YELLOW_SQUARE}{YELLOW_SQUARE}{YELLOW_SQUARE}{ORANGE_SQUARE}{ORANGE_SQUARE}{RED_SQUARE}| 12pm""", True),

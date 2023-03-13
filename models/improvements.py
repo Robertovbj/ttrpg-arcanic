@@ -4,7 +4,7 @@ from emojis import RED_SQUARE, WHITE_SQUARE, CHECK_SQUARE
 
 class ImprovementPage(Page):
     def __init__(self):
-        super().__init__("Improvement")
+        super().__init__()
         self.fields = [
             Field(f"EXPERIENCE", f"""{RED_SQUARE}{RED_SQUARE}{WHITE_SQUARE}{WHITE_SQUARE}{WHITE_SQUARE}"""),
             Field(f"IMPROVEMENT", f"""{CHECK_SQUARE} get +1 sharp (max sharp+3)

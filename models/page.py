@@ -1,8 +1,7 @@
 from .field import Field
 
 class Page:
-    def __init__(self, description, fields=None):
-        self.description = description
+    def __init__(self, fields=None):
         self.fields = fields or []
 
     def add_field(self, field):
@@ -10,6 +9,5 @@ class Page:
 
     def to_dict(self):
         return {
-            'description': self.description,
             'fields': [field.to_dict() for field in self.fields]
         }

@@ -5,7 +5,5 @@ __pycache__/
 *.pyc
 # Exclude config with sensitive info
 config.py
-# Exclude system pdfs
-ApocalypseWorldBasicRefbook2ndEd.pdf
-ApocalypseWorldExtendedPlaybooks2ndEd.pdf
-AW-basicplaybooks-legal.pdf
+# Exclude personal helper files
+mydoc/

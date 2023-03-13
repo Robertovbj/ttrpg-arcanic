@@ -1,9 +1,12 @@
 from .page import Page
 
 class PageManager:
-    def __init__(self, title, pages):
+    def __init__(self, title, description, pages, thumbnail='https://i.imgur.com/fAi8DsQ.png'):
         self.title = title
+        self.description = description
+        self.color = 0xff3838
         self.pages = pages
+        self.thumbnail = thumbnail
         self.current_page_index = 0
 
     def add_page(self, page):
@@ -17,11 +20,15 @@ class PageManager:
 
     def get_embed_dict(self):
         current_page = self.get_current_page()
-        return {
+        manager_dict = {
             'title': self.title,
-            'description': current_page.description,
-            'fields': current_page.fields
+            'description': self.description,
+            'color': self.color,
+            'thumbnail': {
+                'url': self.thumbnail
+            }
         }
+        return {**manager_dict, **current_page.to_dict()}
 
     def turn_page(self, delta):
         self.current_page_index += delta
