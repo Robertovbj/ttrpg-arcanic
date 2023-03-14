@@ -1,5 +1,5 @@
 class PageManager:
-    def __init__(self, title, description, pages, thumbnail='https://i.imgur.com/fAi8DsQ.png'):
+    def __init__(self, title, description, pages, thumbnail=None):
         self.title = title
         self.description = description
         self.color = 0xff3838
@@ -15,6 +15,9 @@ class PageManager:
     
     def get_current_page_index(self):
         return self.current_page_index
+    
+    def get_pages_amount(self):
+        return len(self.pages)
 
     def get_embed_dict(self):
         current_page = self.get_current_page()
