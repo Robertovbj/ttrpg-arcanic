@@ -3,6 +3,7 @@ import sqlite3
 class Database:
     def __init__(self):
         self.conn = sqlite3.connect("apocalypse.db")
+        self.conn.execute("PRAGMA foreign_keys = 1")
         self.cursor = self.conn.cursor()
 
     def insert(self, table_name, values):
@@ -19,7 +20,12 @@ class Database:
         select_query = f"SELECT {columns_str} FROM {table_name}{where_str}"
         self.cursor.execute(select_query)
         return self.cursor.fetchall()
-
+    
+    def delete(self, table_name, column_name, value):
+        query = f"DELETE FROM {table_name} WHERE {column_name} = ?"
+        self.cursor.execute(query, (value,))
+        self.conn.commit()
+        
     def close(self):
         """Close the database connection"""
         self.conn.close()

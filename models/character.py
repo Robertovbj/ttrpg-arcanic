@@ -28,6 +28,19 @@ class Character:
     def check_if_exists(self, user: str, server: str) -> int:
         """Returns 0 if the user doesn't have a character in the server. Returns 1 otherwise."""
         return self.db.select("CHARACTERS", columns=["COUNT(*)"], where=f"CHR_SERVER_ID = {server} AND CHR_USER_ID = {user}")[0][0]
+    
+    def get_character_name(self, user: str, server: str) -> str:
+        """Returns character name"""
+        return self.db.select("CHARACTERS", columns=["CHR_NAME"], where=f"CHR_SERVER_ID = {server} AND CHR_USER_ID = {user}")[0][0]
+    
+    def get_character_id(self, user: str, server: str) -> int:
+        """Returns character id"""
+        return self.db.select("CHARACTERS", columns=["CHR_ID"], where=f"CHR_SERVER_ID = {server} AND CHR_USER_ID = {user}")[0][0]
+
+    def delete_character(self, user: str, server: str) -> None:
+        """Deletes character"""
+        id = self.get_character_id(user, server)
+        self.db.delete("CHARACTERS", 'CHR_ID', id)
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):

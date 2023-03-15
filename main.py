@@ -1,5 +1,6 @@
 import discord as dc
 from tabulate import tabulate
+import asyncio
 from discord.ext import commands
 from models.page import Page
 from models.stats import StatsPage
@@ -197,6 +198,31 @@ async def createsheet(ctx: commands.Context, name: str):
             await ctx.reply("Character created successfully" if text == None else text)
 
 @bot.command()
+async def deletesheet(ctx: commands.Context):
+
+    author = str(ctx.author.id)
+    server = str(ctx.guild.id)
+
+    if not Character().check_if_exists(author, server):
+        await ctx.reply("No character found on this server.")
+        return
+
+    char_name = Character().get_character_name(author, server)
+
+    confirmation_bot = await ctx.reply(f'Are you sure you want to delete your character? This action is _**IRREVERSIBLE**_.\nType "{char_name}" to confirm.')
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=10.0, check= lambda m: check_confirm_message(m, ctx, char_name))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Character not deleted.')
+    else:
+        try:
+            Character().delete_character(author, server)
+            await ctx.send('Character deleted successfully.')
+        except:
+            await ctx.send('Something went wrong.')
+
+@bot.command()
 async def moves(ctx: commands.Context):
     """Command to list all moves stored in the database"""
     moves = Moves().get_all_moves()
@@ -248,6 +274,9 @@ def check_reaction(reaction: dc.Reaction, user: dc.User | dc.Member, ctx: comman
     """Checks if it was the message author that reacted to 
     the message, and if the reaction is on the valid reactions list."""
     return user == ctx.author and str(reaction.emoji) in emojis_list
+
+def check_confirm_message(message: dc.Message, ctx: commands.Context, text: str):
+    return message.content == text and message.channel == ctx.channel and message.author == ctx.author
 
 def iterate_moves(moves: list[tuple], playbooks: list[tuple], pages: list, special: str = None) -> list[Page]:
     """Iterate through the moves list, adding which type
