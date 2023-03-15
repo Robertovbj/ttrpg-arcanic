@@ -123,7 +123,7 @@ async def createsheet(ctx: commands.Context, name: str):
 
     while True:
         try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check(r, u, ctx, emojis.ARROWS_LIST + emojis.NUMBER_LIST))
+            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST + emojis.NUMBER_LIST))
 
             if str(reaction) in emojis.ARROWS_LIST:
                 await turn_pages(msg, reaction, user, pageManager)
@@ -166,7 +166,7 @@ async def createsheet(ctx: commands.Context, name: str):
 
         while True:
             try:
-                reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check(r, u, ctx, emojis.NUMBER_LIST[0:4]))
+                reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.NUMBER_LIST[0:4]))
 
                 if str(reaction) in emojis.NUMBER_LIST[0:4]:
                     set_choice = emojis.NUMBER_LIST.index(str(reaction))+1
@@ -215,7 +215,7 @@ async def moves(ctx: commands.Context):
 
     while True:
         try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check(r, u, ctx, emojis.ARROWS_LIST))
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST))
 
             await turn_pages(msg, reaction, user, page_manager)
         except:
@@ -244,7 +244,7 @@ async def turn_pages(message: dc.Message, reaction: dc.Reaction, user: dc.User |
     await message.edit(embed=embed)
     await message.remove_reaction(reaction, user)
 
-def check(reaction: dc.Reaction, user: dc.User | dc.Member, ctx: commands.Context, emojis_list: list[str]) -> bool:
+def check_reaction(reaction: dc.Reaction, user: dc.User | dc.Member, ctx: commands.Context, emojis_list: list[str]) -> bool:
     """Checks if it was the message author that reacted to 
     the message, and if the reaction is on the valid reactions list."""
     return user == ctx.author and str(reaction.emoji) in emojis_list
