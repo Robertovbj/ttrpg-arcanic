@@ -9,7 +9,7 @@ class Character:
         self.db = Database()
 
     def create_new(self, data: dict):
-        """Insert a new row into the given table with the given values"""
+        """Create a new character for the user in this server."""
         insert_character = f"INSERT INTO CHARACTERS(CHR_SERVER_ID, CHR_USER_ID, CHR_NAME, FK_PLB_ID, CHR_IMAGE) VALUES (?, ?, ?, ?, ?);"
         insert_stats = f"INSERT INTO STATS(STT_STAT, STT_VALUE, FK_CHR_ID) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?);"
 
@@ -25,7 +25,8 @@ class Character:
             self.db.close()
         return None
     
-    def check_if_exists(self, user, server):
+    def check_if_exists(self, user: str, server: str) -> int:
+        """Returns 0 if the user doesn't have a character in the server. Returns 1 otherwise."""
         return self.db.select("CHARACTERS", columns=["COUNT(*)"], where=f"CHR_SERVER_ID = {server} AND CHR_USER_ID = {user}")[0][0]
 
 class NewCharacterPage(Page):

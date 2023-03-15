@@ -1,5 +1,5 @@
 class PageManager:
-    def __init__(self, title, description, pages, thumbnail=None):
+    def __init__(self, title, pages, description=None, thumbnail=None):
         self.title = title
         self.description = description
         self.color = 0xff3838

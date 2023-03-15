@@ -1,25 +1,21 @@
 from .page import Page
 from .field import Field
+from configs.database import Database
 
 class MovesPage(Page):
-    def __init__(self):
+    def __init__(self, moves: str, special: str = None):
         super().__init__()
-        self.fields = [
-            Field(f"ANGEL MOVES", f"""Sixth sense
-            Infirmary"""),
-            Field(f"SPECIAL MOVES", f"""If you and another character have sex, 
-            your Hx with them on your sheet goes immediately 
-            to +3, and they immediately get +1 to their Hx 
-            with you on their sheet. If that brings their Hx 
-            with you to +4, they reset it to +1 instead, as 
-            usual, and so mark experience."""),
-            Field("BASIC MOVES", f"""Do something under fire
-            Go aggro
-            Seize by force
-            Seduce or manipulate
-            Read a sitch
-            Read a person
-            Open your brain
-            Help or interfere
-            Session end""")
-        ]
+        self.moves = moves
+        self.special = special
+        self.fields = []
+        if self.special is not None:
+            self.fields.append(Field(f"Special Moves", f"{self.special}"))
+        self.fields.append(Field(f"Moves", f"""{self.moves}"""))
+
+class Moves:
+    def __init__(self):
+        self.db = Database()
+
+    def get_all_moves(self) -> list[tuple]:
+        """Returns all moves stored in the database"""
+        return self.db.select("MOVES")

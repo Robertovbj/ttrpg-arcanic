@@ -4,7 +4,7 @@ from discord.ext import commands
 from models.stats import StatsPage
 from models.harm import HarmPage
 from models.hx import HxPage
-from models.moves import MovesPage
+from models.moves import MovesPage, Moves
 from models.improvements import ImprovementPage
 from models.inventory import InventoryPage
 from models.page_manager import PageManager
@@ -40,34 +40,57 @@ db = Database()
     # elif str(reaction.emoji) == emojis.EMOJI_RIGHT:
     #     await ctx.send(f'Sorry you didn\'t like it, {user.mention}!')
 
-@bot.command()
-async def checksheet(ctx: commands.Context):
+# @bot.command()
+# async def checksheet(ctx: commands.Context, tag: dc.User = None):
     
-    pages = [
-        StatsPage(),
-        HxPage(),
-        HarmPage(),
-        MovesPage(),
-        ImprovementPage(),
-        InventoryPage()
-    ]
-    page_manager = PageManager("Name: Dou", "Playbook: The Angel", pages)
+#     author = ''
+#     server = str(ctx.guild.id)
 
-    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
-    msg = await ctx.reply(embed=embed)
+#     try:
+#         if tag is None:
+#             author = str(ctx.author.id)
+#         elif not isinstance(tag, dc.User):
+#             await ctx.reply("To check someone's else sheet, please use ```/checksheet @user```")
+#             return
+#         else:
+#             author = str(tag.id)
+#     except commands.errors.UserNotFound:
+#         print('test')
+#         await ctx.reply("User not found.")
+#         return
 
-    await add_arrows(msg)
+#     if not Character().check_if_exists(author, server):
+#         await ctx.reply("No character found on this server.")
+#         return
+    
+    
 
-    while True:
-        try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check(r, u, ctx, emojis.ARROWS_LIST))
+#     pages = [
+#         StatsPage(),
+#         HxPage(),
+#         HarmPage(),
+#         MovesPage(),
+#         ImprovementPage(),
+#         InventoryPage()
+#     ]
+#     page_manager = PageManager("Name: Dou", "Playbook: The Angel", pages)
 
-            await turn_pages(msg, reaction, user, page_manager)
-        except:
-            break
+#     embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+#     msg = await ctx.reply(embed=embed)
+
+#     await add_arrows(msg)
+
+#     while True:
+#         try:
+#             reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check(r, u, ctx, emojis.ARROWS_LIST))
+
+#             await turn_pages(msg, reaction, user, page_manager)
+#         except:
+#             break
 
 @bot.command()
 async def createsheet(ctx: commands.Context, name: str):
+    """Create a new character"""
 
     if Character().check_if_exists(str(ctx.author.id), str(ctx.guild.id)):
         await ctx.reply("You already have a character sheet created in this server.")
@@ -84,7 +107,7 @@ async def createsheet(ctx: commands.Context, name: str):
         batch_emojis = "\n".join(emoji for emoji in emojis.NUMBER_LIST[0:batch_playbooks.count("\n")+1])
         pages.append( NewCharacterPage(batch_playbooks, batch_emojis) ) 
 
-    pageManager = PageManager(f"Name: {name}", "Playbook: Choosing...", pages)
+    pageManager = PageManager(f"Name: {name}", pages, "Playbook: Choosing...")
 
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     msg = await ctx.reply(embed=embed)
@@ -106,7 +129,7 @@ async def createsheet(ctx: commands.Context, name: str):
             elif str(reaction) in emojis.NUMBER_LIST:
                 playbook_choice = (pageManager.get_current_page_index() * 10)+(emojis.NUMBER_LIST.index(str(reaction))+1)
                 if playbook_choice > 18:
-                    await ctx.send("Please select a valid option")
+                    await ctx.reply("Please select a valid option")
                     await msg.remove_reaction(reaction, user)
                 else:
                     break
@@ -129,7 +152,7 @@ async def createsheet(ctx: commands.Context, name: str):
         pages = [ChooseSetPage(f"```{table}```")]
 
         # Resets pages, as they wont be used anymore
-        pageManager = PageManager(f"{name}", f"Playbook: {playbooks[playbook_choice-1][1]}", pages, thumbnail=playbooks[playbook_choice-1][3])
+        pageManager = PageManager(f"{name}", pages, description=f"Playbook: {playbooks[playbook_choice-1][1]}", thumbnail=playbooks[playbook_choice-1][3])
 
         embed = dc.Embed.from_dict(pageManager.get_embed_dict())
         await msg.edit(embed=embed)
@@ -170,10 +193,36 @@ async def createsheet(ctx: commands.Context, name: str):
 
             text = Character().create_new(data)
 
-            await ctx.send("Character created successfully" if text == None else text)
+            await ctx.reply("Character created successfully" if text == None else text)
+
+@bot.command()
+async def moves(ctx: commands.Context):
+    """Command to list all moves stored in the database"""
+    moves = Moves().get_all_moves()
+    playbooks = Playbook().get_names()
+    playbooks.insert(0, (0, "Basic"))
+    pages = []
+
+    pages = iterate_moves(moves, playbooks, pages)
+
+    page_manager = PageManager("Moves list", pages)
+
+    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+    msg = await ctx.reply(embed=embed)
+
+    await add_arrows(msg)
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check(r, u, ctx, emojis.ARROWS_LIST))
+
+            await turn_pages(msg, reaction, user, page_manager)
+        except:
+            break
 
 @bot.command()
 async def snow(ctx):
+    """Test command. Should be removed for release"""
     server_id = str(ctx.guild.id)
     await ctx.reply(f'{server_id}')
     # await ctx.reply(f'**teste** {ctx.message.author.mention} {user_id}')
@@ -195,5 +244,10 @@ async def turn_pages(message, reaction, user, page_manager):
 def check(reaction, user, ctx, emojis_list):
     return user == ctx.author and str(reaction.emoji) in emojis_list
 
+def iterate_moves(moves: list[tuple], playbooks: list[tuple], pages: list, special: str = None):
+    for i in range(0, len(moves), 20):
+        batch_moves = "\n".join(str(moves[j][1]) if moves[j-1][2] == moves[j][2] else f"\n**{playbooks[moves[j][2]][1]}**\n{moves[j][1]}" for j in range(i, len(moves[i:i+20])+i))
+        pages.append(MovesPage(batch_moves))
+    return pages
 
 bot.run( TOKEN )
