@@ -1,6 +1,7 @@
 import discord as dc
 from tabulate import tabulate
 from discord.ext import commands
+from models.page import Page
 from models.stats import StatsPage
 from models.harm import HarmPage
 from models.hx import HxPage
@@ -227,11 +228,13 @@ async def snow(ctx):
     await ctx.reply(f'{server_id}')
     # await ctx.reply(f'**teste** {ctx.message.author.mention} {user_id}')
 
-async def add_arrows(message):
+async def add_arrows(message: dc.Message):
+    """Add arrow_lef and arrow_right to the message. Useful for paging"""
     await message.add_reaction(emojis.EMOJI_LEFT) # left arrow
     await message.add_reaction(emojis.EMOJI_RIGHT) # right arrow
 
-async def turn_pages(message, reaction, user, page_manager):
+async def turn_pages(message: dc.Message, reaction: dc.Reaction, user: dc.User | dc.Member, page_manager: PageManager):
+    """Turn pages on a discord embed."""
     if str(reaction.emoji) == emojis.EMOJI_LEFT:
         page_manager.turn_page(-1)
     elif str(reaction.emoji) == emojis.EMOJI_RIGHT:
@@ -241,13 +244,19 @@ async def turn_pages(message, reaction, user, page_manager):
     await message.edit(embed=embed)
     await message.remove_reaction(reaction, user)
 
-def check(reaction, user, ctx, emojis_list):
+def check(reaction: dc.Reaction, user: dc.User | dc.Member, ctx: commands.Context, emojis_list: list[str]) -> bool:
+    """Checks if it was the message author that reacted to 
+    the message, and if the reaction is on the valid reactions list."""
     return user == ctx.author and str(reaction.emoji) in emojis_list
 
-def iterate_moves(moves: list[tuple], playbooks: list[tuple], pages: list, special: str = None):
+def iterate_moves(moves: list[tuple], playbooks: list[tuple], pages: list, special: str = None) -> list[Page]:
+    """Iterate through the moves list, adding which type
+    of move it is before the list of moves of the same type,
+    creating a new page for each 20 moves. Return the list of MovesPage
+    created."""
     for i in range(0, len(moves), 20):
         batch_moves = "\n".join(str(moves[j][1]) if moves[j-1][2] == moves[j][2] else f"\n**{playbooks[moves[j][2]][1]}**\n{moves[j][1]}" for j in range(i, len(moves[i:i+20])+i))
-        pages.append(MovesPage(batch_moves))
+        pages.append(MovesPage(batch_moves, special))
     return pages
 
 bot.run( TOKEN )
