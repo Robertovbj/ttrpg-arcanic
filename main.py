@@ -17,8 +17,10 @@ from configs.database import Database
 from config import TOKEN  # Import the bot token from the config module
 import emojis
 
+PREFIX = '!'
+
 intents = dc.Intents.all()
-bot = commands.Bot( command_prefix='!', intents=intents )
+bot = commands.Bot( command_prefix=f'{PREFIX}', intents=intents )
 db = Database()
 
 # @bot.command()
@@ -94,7 +96,9 @@ db = Database()
 async def createsheet(ctx: commands.Context, name: str):
     """Create a new character"""
 
-    if Character().check_if_exists(str(ctx.author.id), str(ctx.guild.id)):
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if character.check_if_exists():
         await ctx.reply("You already have a character sheet created in this server.")
         return
 
@@ -181,8 +185,6 @@ async def createsheet(ctx: commands.Context, name: str):
             data = {
                 'name': name,
                 'playbook': playbook_choice,
-                'user': str(ctx.author.id),
-                'server': str(ctx.guild.id),
                 'image': str(playbooks[playbook_choice-1][3]),
                 'stats': {
                     'cool': stats_sets[set_choice-1][1],
@@ -193,21 +195,20 @@ async def createsheet(ctx: commands.Context, name: str):
                 }
             }
 
-            text = Character().create_new(data)
+            text = character.create_new(data)
 
             await ctx.reply("Character created successfully" if text == None else text)
 
 @bot.command()
 async def deletesheet(ctx: commands.Context):
 
-    author = str(ctx.author.id)
-    server = str(ctx.guild.id)
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
 
-    if not Character().check_if_exists(author, server):
+    if not character.check_if_exists():
         await ctx.reply("No character found on this server.")
         return
 
-    char_name = Character().get_character_name(author, server)
+    char_name = character.get_character_name()
 
     confirmation_bot = await ctx.reply(f'Are you sure you want to delete your character? This action is _**IRREVERSIBLE**_.\nType "{char_name}" to confirm.')
 
@@ -217,10 +218,38 @@ async def deletesheet(ctx: commands.Context):
         await confirmation_bot.edit(content='Confirmation timed out. Character not deleted.')
     else:
         try:
-            Character().delete_character(author, server)
+            character.delete_character()
             await ctx.send('Character deleted successfully.')
         except:
             await ctx.send('Something went wrong.')
+
+@bot.command()
+async def getexp(ctx: commands.Context, amount):
+    """Add specified amount of exp to your sheet.
+    Also calculates and return amount of improvement points."""
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    try:
+        # Deals with the possibility of wrong user input
+        amount = int(amount)
+    except:
+        await ctx.reply(f"To get exp, please follow the example: ```{PREFIX}getexp 2```")
+        return
+    
+    try:
+        imp = character.add_exp(amount)
+    except:
+        await ctx.reply(f'Sorry, something went wrong.')
+        return
+    else:
+        imp_text = ""
+        if imp > 0:
+            imp_text = f" You have {imp} improvement points."
+        await ctx.reply(f'{amount} points of exp added.{imp_text}')
 
 @bot.command()
 async def moves(ctx: commands.Context):

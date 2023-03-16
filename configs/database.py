@@ -21,6 +21,23 @@ class Database:
         self.cursor.execute(select_query)
         return self.cursor.fetchall()
     
+    def update(self, table_name, primary_key, record_id, **kwargs):
+        # Generate SET clause using keyword arguments
+        set_clause = ', '.join([f"{key} = ?" for key in kwargs.keys()])
+
+        # Generate query string
+        query = f"UPDATE {table_name} SET {set_clause} WHERE {primary_key} = ?"
+
+        # Generate parameter tuple
+        params = tuple(kwargs.values()) + (record_id,)
+
+        # Execute query and commit changes
+        self.cursor.execute(query, params)
+        self.conn.commit()
+
+        # Return number of affected rows
+        return self.cursor.rowcount
+    
     def delete(self, table_name, column_name, value):
         query = f"DELETE FROM {table_name} WHERE {column_name} = ?"
         self.cursor.execute(query, (value,))
