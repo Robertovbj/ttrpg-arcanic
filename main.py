@@ -213,7 +213,7 @@ async def deletesheet(ctx: commands.Context):
     confirmation_bot = await ctx.reply(f'Are you sure you want to delete your character? This action is _**IRREVERSIBLE**_.\nType "{char_name}" to confirm.')
 
     try:
-        confirm_message = await bot.wait_for('message', timeout=10.0, check= lambda m: check_confirm_message(m, ctx, char_name))
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, char_name))
     except asyncio.TimeoutError:
         await confirmation_bot.edit(content='Confirmation timed out. Character not deleted.')
     else:
@@ -295,6 +295,110 @@ async def harminfo(ctx: commands.Context):
 
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     await ctx.reply(embed=embed)
+
+@bot.command()
+async def takeharm(ctx: commands.Context, amount):
+    """Add specified amount of harm to your sheet.
+    Also calculates and return warning if you're going to die"""
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    try:
+        # Deals with the possibility of wrong user input
+        amount = int(amount)
+    except:
+        await ctx.reply(f"To take harm, please follow the example: ```{PREFIX}takeharm 2```")
+        return
+    
+    if amount < 1:
+        await ctx.reply(f"""Please use only positive numbers, as the following example: ```{PREFIX}takeharm 1```\nIf you want to heal your harms, use: ```{PREFIX}healharm [amount]``` """)
+        return
+    
+    harms = character.get_harms()
+    char_info = character.get_basic_profile()
+    harm_total = harms[0] + amount
+    how_dead = ''
+
+    if harm_total > 6:
+        how_dead = f"_You'll **die**_, and you **won't be able to be revived**, since your harm exceeds the limit by {harm_total - 6} extra points."
+        harm_total = 6
+    elif harm_total == 6:
+        how_dead = f"_You'll **die**_, but **can still be revived**."
+
+    harms = (harm_total,)+ harms[1:6]
+
+    pages = [HarmPage(harms)]
+
+    pageManager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+
+    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
+    confirmation_bot = await ctx.reply(content=f"This is how much harm you'll have after confirming. {how_dead} Type 'Confirm' to proceed.", embed=embed)
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Harm not taken.')
+    else:
+        try:
+            character.update_harm(harms[0])
+        except:
+            await ctx.reply(f'Sorry, something went wrong.')
+            return
+        else:
+            await ctx.reply(f'You take {amount}-harm. Ouch!')
+
+@bot.command()
+async def healharm(ctx: commands.Context, amount):
+    """Heal specified amount of harm on your sheet."""
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    try:
+        # Deals with the possibility of wrong user input
+        amount = int(amount)
+    except:
+        await ctx.reply(f"To heal harm, please follow the example: ```{PREFIX}healharm 2```")
+        return
+    
+    if amount < 1:
+        await ctx.reply(f"""Please use only positive numbers, as the following example: ```{PREFIX}healharm 1```\nIf you want to take harm, use: ```{PREFIX}takeharm [amount]``` """)
+        return
+    
+    harms = character.get_harms()
+    char_info = character.get_basic_profile()
+    harm_total = harms[0] - amount
+    how_dead = ''
+
+    if harm_total < 0:
+        harm_total = 0
+
+    harms = (harm_total,)+ harms[1:6]
+
+    pages = [HarmPage(harms)]
+
+    pageManager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+
+    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
+    confirmation_bot = await ctx.reply(content=f"This is how much harm you'll have after confirming. Type 'Confirm' to proceed.", embed=embed)
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=15.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Harm not healed.')
+    else:
+        try:
+            character.update_harm(harms[0])
+        except:
+            await ctx.reply(f'Sorry, something went wrong.')
+            return
+        else:
+            await ctx.reply(f'You heal {amount}-harm. Nice.')
 
 @bot.command()
 async def snow(ctx):

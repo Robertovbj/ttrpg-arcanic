@@ -11,9 +11,9 @@ class HarmPage(Page):
         conditions = ['Stabilized', 'Shattered', 'Crippled', 'Disfigured', 'Broken']
 
         harm_bar = "12pm\n"
-        harm_bar += "\n".join(white[0:6-harm[0]]) + "\n" if harm != 6 else ""
+        harm_bar += "\n".join(white[0:6-harm[0]]) + "\n" if harm[0] != 6 else ""
         harm_bar += "\n".join(color[6-harm[0]:6])
-        harm_bar += ("\n" if harm != 0 else "") + "12am"
+        harm_bar += ("\n" if harm[0] != 0 else "") + "12am"
 
         conditions_text = ''.join(('_' + conditions[i-1] + '_\n') if harm[i] == 1 else '' for i in range(1, len(harm))) 
 
