@@ -66,9 +66,13 @@ class Character:
         """Returns character id, name, playbook (name) and image"""
         return self.db.select("CHARACTERS, PLAYBOOK", columns=["CHR_ID", "CHR_NAME", "PLB_NAME", "CHR_IMAGE"], where=f"CHR_SERVER_ID = {self.server} AND CHR_USER_ID = {self.user} AND FK_PLB_ID = PLB_ID")[0]
 
-    def update_harm(self, amount: int):
+    def update_harm(self, amount: int) -> None:
         """Updates harm amount. Can also heal"""
         self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_HARM = amount)
+
+    def update_dharms(self, harms: tuple) -> None:
+        """Updates harm amount and debilities. Can also heal and remove debilities."""
+        self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_HARM = harms[0], CHR_STABILIZED = harms[1], CHR_SHATTERED = harms[2], CHR_CRIPPLED = harms[3], CHR_DISFIGURED = harms[4], CHR_BROKEN = harms[5])
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):

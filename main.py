@@ -373,7 +373,6 @@ async def healharm(ctx: commands.Context, amount):
     harms = character.get_harms()
     char_info = character.get_basic_profile()
     harm_total = harms[0] - amount
-    how_dead = ''
 
     if harm_total < 0:
         harm_total = 0
@@ -399,6 +398,61 @@ async def healharm(ctx: commands.Context, amount):
             return
         else:
             await ctx.reply(f'You heal {amount}-harm. Nice.')
+
+@bot.command()
+async def fullheal(ctx: commands.Context):
+    """Full heal your character"""
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    harms = character.get_harms()
+
+    harms = (0,)+ harms[1:6]
+
+    confirmation_bot = await ctx.reply(content=f"Confirming will fully heal your character (you keep your debilities). Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=15.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Harm not healed.')
+    else:
+        try:
+            character.update_harm(harms[0])
+        except:
+            await ctx.reply(f'Sorry, something went wrong.')
+            return
+        else:
+            await ctx.reply(f'You\'re now fully healed.')
+
+@bot.command()
+async def fullhealc(ctx: commands.Context):
+    """Full heal your character, including debilities"""
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    harms = (0, 0, 0, 0, 0, 0)
+
+    confirmation_bot = await ctx.reply(content=f"Confirming will fully heal your character, including debilities. Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=15.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Harm not healed.')
+    else:
+        try:
+            character.update_dharms(harms)
+        except:
+            await ctx.reply(f'Sorry, something went wrong.')
+            return
+        else:
+            await ctx.reply(f'You\'re now fully healed.')
+
 
 @bot.command()
 async def snow(ctx):
