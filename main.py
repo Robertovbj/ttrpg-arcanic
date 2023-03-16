@@ -277,12 +277,32 @@ async def moves(ctx: commands.Context):
             break
 
 @bot.command()
+async def harminfo(ctx: commands.Context):
+    """Shows character harms"""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    harms = character.get_harms()
+    char_info = character.get_basic_profile()
+
+    pages = [HarmPage(harms)]
+
+    pageManager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+
+    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
+    await ctx.reply(embed=embed)
+
+@bot.command()
 async def snow(ctx):
     """Test command. Should be removed for release"""
-    server_id = str(ctx.guild.id)
-    await ctx.reply(f'{server_id}')
-    # await ctx.reply(f'**teste** {ctx.message.author.mention} {user_id}')
+    pages = [HarmPage(0)]
 
+    pageManager = PageManager(f"Name: a", pages, "Playbook: Choosing...")
+
+    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
+    msg = await ctx.reply(embed=embed)
+
+# Helper functions
 async def add_arrows(message: dc.Message):
     """Add arrow_lef and arrow_right to the message. Useful for paging"""
     await message.add_reaction(emojis.EMOJI_LEFT) # left arrow

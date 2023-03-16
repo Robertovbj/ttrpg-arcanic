@@ -58,6 +58,15 @@ class Character:
         self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_EXP = exp, CHR_IMPROVEMENT = imp)
         return imp
 
+    def get_harms(self) -> tuple:
+        """Returns character harms"""
+        return self.db.select("CHARACTERS", columns=["CHR_HARM", "CHR_STABILIZED", "CHR_SHATTERED", "CHR_CRIPPLED", "CHR_DISFIGURED", "CHR_BROKEN"], where=f"CHR_SERVER_ID = {self.server} AND CHR_USER_ID = {self.user}")[0]
+
+    def get_basic_profile(self) -> tuple:
+        """Returns character id, name, playbook (name) and image"""
+        return self.db.select("CHARACTERS, PLAYBOOK", columns=["CHR_ID", "CHR_NAME", "PLB_NAME", "CHR_IMAGE"], where=f"CHR_SERVER_ID = {self.server} AND CHR_USER_ID = {self.user} AND FK_PLB_ID = PLB_ID")[0]
+
+
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
         super().__init__()
