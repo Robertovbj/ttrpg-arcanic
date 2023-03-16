@@ -282,6 +282,10 @@ async def harminfo(ctx: commands.Context):
 
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
     harms = character.get_harms()
     char_info = character.get_basic_profile()
 
