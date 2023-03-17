@@ -277,6 +277,28 @@ async def moves(ctx: commands.Context):
             break
 
 @bot.command()
+async def mymoves(ctx: commands.Context):
+    """Command to list your character's moves"""
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    moves, special = character.get_char_moves()
+    playbooks = Playbook().get_names()
+    playbooks.insert(0, (0, "Basic"))
+    char_info = character.get_basic_profile()
+    pages = []
+
+    pages = iterate_moves(moves, playbooks, pages, special)
+
+    pageManager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+
+    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
+    await ctx.reply(embed=embed)
+
+@bot.command()
 async def harminfo(ctx: commands.Context):
     """Shows character harms"""
 
