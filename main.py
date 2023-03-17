@@ -475,16 +475,48 @@ async def fullhealc(ctx: commands.Context):
         else:
             await ctx.reply(f'You\'re now fully healed.')
 
+@bot.command()
+async def hxinfo(ctx: commands.Context, tag: dc.Member = None):
+
+    author = str(ctx.author.id)
+    server = str(ctx.guild.id)
+
+    character = Character(author, server)
+    char_info = character.get_basic_profile()
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    pages = []
+    if tag is None:
+        hx = character.get_hx_list()
+        pages = [HxPage(hx)]
+    else: 
+        hx = character.get_hx_ind(tag.id)
+        if not len(hx) == 0 and not hx[0][2] == 0:
+            pages = [HxPage(hx)]
+        else:
+            await ctx.reply(content="You don't seem to have any HX with this character.")
+            return
+
+    page_manager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+
+    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+    await ctx.reply(embed=embed)
+    
+@hxinfo.error
+async def hxinfo_error(ctx, error):
+    if isinstance(error, commands.BadArgument):
+        await ctx.send("Sorry, I couldn't find that member on this server.")
+    elif isinstance(error, commands.MemberNotFound):
+        await ctx.send("Sorry, I couldn't find that member on this server.")
 
 @bot.command()
 async def snow(ctx):
     """Test command. Should be removed for release"""
-    pages = [HarmPage(0)]
-
-    pageManager = PageManager(f"Name: a", pages, "Playbook: Choosing...")
-
-    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
-    msg = await ctx.reply(embed=embed)
+    print('@' + str(ctx.author.name))
+    await ctx.send(content=f'@{ctx.author.name}')
 
 # Helper functions
 async def add_arrows(message: dc.Message):

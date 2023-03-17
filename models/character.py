@@ -79,6 +79,14 @@ class Character:
         moves = self.db.select("CHARACTERS AS c, CHARACTER_MOVES AS cm, MOVES AS m", columns=["m.*"], where=f"c.CHR_USER_ID = {self.user} AND c.CHR_SERVER_ID = {self.server} AND c.CHR_ID = cm.FK_CHR_ID AND cm.FK_MVS_ID = m.MVS_ID")
         special = self.db.select("CHARACTERS, PLAYBOOK", columns=["PLB_SPECIAL"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND PLB_ID = FK_PLB_ID")
         return moves, special[0][0] 
+    
+    def get_hx_list(self):
+        """Gets all hx from a character"""
+        return self.db.select("CHARACTERS AS cto, CHARACTERS AS cfrom, HX AS h", columns=["cfrom.CHR_NAME", "cto.CHR_NAME", "h.HX_VALUE"], where=f"cfrom.CHR_USER_ID = {self.user} AND cfrom.CHR_SERVER_ID = {self.server} AND cto.CHR_SERVER_ID = cfrom.CHR_SERVER_ID AND cfrom.CHR_ID = h.FK_CHR_ID_FROM AND cto.CHR_ID = h.FK_CHR_ID_TO")
+
+    def get_hx_ind(self, id_to: int):
+        """Gets hx from a character to another"""
+        return self.db.select("CHARACTERS AS cto, CHARACTERS AS cfrom, HX AS h", columns=["cfrom.CHR_NAME", "cto.CHR_NAME", "h.HX_VALUE"], where=f"cfrom.CHR_USER_ID = {self.user} AND cfrom.CHR_SERVER_ID = {self.server} AND cto.CHR_SERVER_ID = cfrom.CHR_SERVER_ID AND cfrom.CHR_ID = h.FK_CHR_ID_FROM AND cto.CHR_ID = h.FK_CHR_ID_TO AND cto.CHR_USER_ID = {id_to}")
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
