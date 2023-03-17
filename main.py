@@ -477,6 +477,8 @@ async def fullhealc(ctx: commands.Context):
 
 @bot.command()
 async def hxinfo(ctx: commands.Context, tag: dc.Member = None):
+    """Returns all hx info from a character. If a user is
+    tagged, it returns the hx towards that character."""
 
     author = str(ctx.author.id)
     server = str(ctx.guild.id)
