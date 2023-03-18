@@ -370,7 +370,7 @@ async def moves(ctx: commands.Context):
 
 @bot.command(usage = f"{PREFIX}mymoves")
 async def mymoves(ctx: commands.Context):
-    """Lists your character's moves"""
+    """Lists your character's moves."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
     if not character.check_if_exists():
@@ -686,6 +686,25 @@ async def learnmoves(ctx: commands.Context, *args: str):
     arg_list = "".join(args).split("|")
     # for arg in arg_list:
     #     await ctx.send(f"Argument is: {arg}")
+
+@bot.command(usage = f"{PREFIX}myimprovements")
+async def myimprovements(ctx: commands.Context):
+    """Lists your character's improvements."""
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    improvements = character.get_improvements()
+    char_info = character.get_basic_profile()
+    exp, imp_points = character.get_exp()
+    pages = [ImprovementPage(exp, imp_points, improvements)]
+
+    pageManager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+
+    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
+    await ctx.reply(embed=embed)
 
 @bot.command()
 async def snow(ctx):

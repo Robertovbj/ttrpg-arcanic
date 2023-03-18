@@ -123,6 +123,9 @@ class Character:
         """Returns 0 if theresn't a character with the specified name on the server. Returns 1 otherwise."""
         return self.db.select("CHARACTERS", columns=["COUNT(*)"], where=f"CHR_SERVER_ID = {self.server} AND CHR_NAME = '{name}'")[0][0]
 
+    def get_improvements(self) -> list[tuple]:
+        """Gets this character's improvements"""
+        return self.db.select("CHARACTERS, CHARACTER_IMPROVEMENTS, IMPROVEMENTS", columns=["CHI_CHECKED", "IMP_TEXT"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND CHR_ID = FK_CHR_ID AND FK_IMP_ID = IMP_ID;")
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
