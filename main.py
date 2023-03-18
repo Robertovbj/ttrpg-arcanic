@@ -136,7 +136,7 @@ async def createsheet(ctx: commands.Context, name: str):
 
     while True:
         try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST + emojis.NUMBER_LIST))
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST + emojis.NUMBER_LIST))
 
             if str(reaction) in emojis.ARROWS_LIST:
                 await turn_pages(msg, reaction, user, pageManager)
@@ -179,7 +179,7 @@ async def createsheet(ctx: commands.Context, name: str):
 
         while True:
             try:
-                reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.NUMBER_LIST[0:4]))
+                reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.NUMBER_LIST[0:4]))
 
                 if str(reaction) in emojis.NUMBER_LIST[0:4]:
                     set_choice = emojis.NUMBER_LIST.index(str(reaction))+1
@@ -342,7 +342,6 @@ async def usebarter(ctx: commands.Context, amount):
 async def use_barter_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of exp to spend. Example: `{PREFIX}usebarter 2`")
-
 
 @bot.command(usage = f"{PREFIX}moves")
 async def moves(ctx: commands.Context):

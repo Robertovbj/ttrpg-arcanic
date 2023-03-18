@@ -15,11 +15,14 @@ class Character:
         """Create a new character for the user in this server."""
         insert_character = f"INSERT INTO CHARACTERS(CHR_SERVER_ID, CHR_USER_ID, CHR_NAME, FK_PLB_ID, CHR_IMAGE) VALUES (?, ?, ?, ?, ?);"
         insert_stats = f"INSERT INTO STATS(STT_STAT, STT_VALUE, FK_CHR_ID) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?);"
+        insert_improvements = f"INSERT INTO CHARACTER_IMPROVEMENTS(FK_CHR_ID, FK_IMP_ID) VALUES (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?);"
 
         try:
             self.db.cursor.execute(insert_character, (self.server, self.user, data['name'], data['playbook'], data['image']))
             insert_id = self.db.cursor.lastrowid
             self.db.cursor.execute(insert_stats, (1, data['stats']['cool'], insert_id, 2, data['stats']['hard'], insert_id, 3, data['stats']['hot'], insert_id, 4, data['stats']['sharp'], insert_id, 5, data['stats']['weird'], insert_id))
+            shift = 7+(data['playbook']-1)*10
+            self.db.cursor.execute(insert_improvements, (insert_id, shift, insert_id, shift+1, insert_id, shift+2, insert_id, shift+3, insert_id, shift+4, insert_id, shift+5, insert_id, shift+6, insert_id, shift+7, insert_id, shift+8, insert_id, shift+9, insert_id, 1, insert_id, 2, insert_id, 3, insert_id, 4, insert_id, 5, insert_id, 6))
             self.db.conn.commit()
         except sqlite3.Error:
             self.db.conn.rollback()
