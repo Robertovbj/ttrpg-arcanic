@@ -21,6 +21,7 @@ PREFIX = '!'
 
 intents = dc.Intents.all()
 bot = commands.Bot( command_prefix=f'{PREFIX}', intents=intents )
+bot.remove_command("help")
 db = Database()
 
 # @bot.command()
@@ -92,9 +93,13 @@ db = Database()
 #         except:
 #             break
 
-@bot.command()
+@bot.command(usage=f"{PREFIX}createsheet <name>")
 async def createsheet(ctx: commands.Context, name: str):
-    """Create a new character"""
+    '''Create a new character with the specified name.
+    To use two or more names, encase them with quotes.
+    
+    Example:
+    `!createsheet "Will Smith"`'''
 
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -199,8 +204,15 @@ async def createsheet(ctx: commands.Context, name: str):
 
             await ctx.reply("Character created successfully" if text == None else text)
 
-@bot.command()
+@createsheet.error
+async def create_sheet_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f'Please specify your character\'s name. Example: `{PREFIX}createsheet "Will Smith"`')
+
+@bot.command(usage=f"{PREFIX}deletesheet")
 async def deletesheet(ctx: commands.Context):
+    """Delete your character **FOREVER**. 
+    Will ask for confirmation to avoid accidents."""
 
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -223,10 +235,11 @@ async def deletesheet(ctx: commands.Context):
         except:
             await ctx.send('Something went wrong.')
 
-@bot.command()
+@bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}getexp <amount>")
 async def getexp(ctx: commands.Context, amount):
-    """Add specified amount of exp to your sheet.
-    Also calculates and return amount of improvement points."""
+    """Add specified amount of exp to your character.
+    Also calculates and shows the amount of improvement points."""
+    
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
     if not character.check_if_exists():
@@ -251,9 +264,14 @@ async def getexp(ctx: commands.Context, amount):
             imp_text = f" You have {imp} improvement points."
         await ctx.reply(f'{amount} points of exp added.{imp_text}')
 
-@bot.command()
+@getexp.error
+async def get_exp_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}getexp 2`")
+
+@bot.command(usage = f"{PREFIX}moves")
 async def moves(ctx: commands.Context):
-    """Command to list all moves stored in the database"""
+    """Lists all moves available."""
     moves = Moves().get_all_moves()
     playbooks = Playbook().get_names()
     playbooks.insert(0, (0, "Basic"))
@@ -276,9 +294,9 @@ async def moves(ctx: commands.Context):
         except:
             break
 
-@bot.command()
+@bot.command(usage = f"{PREFIX}mymoves")
 async def mymoves(ctx: commands.Context):
-    """Command to list your character's moves"""
+    """Lists your character's moves"""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
     if not character.check_if_exists():
@@ -298,9 +316,9 @@ async def mymoves(ctx: commands.Context):
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     await ctx.reply(embed=embed)
 
-@bot.command()
+@bot.command(usage = f"{PREFIX}harminfo")
 async def harminfo(ctx: commands.Context):
-    """Shows character harms"""
+    """Shows your character's harms and conditions."""
 
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -318,10 +336,10 @@ async def harminfo(ctx: commands.Context):
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     await ctx.reply(embed=embed)
 
-@bot.command()
+@bot.command(usage = f"{PREFIX}takeharm <amount>")
 async def takeharm(ctx: commands.Context, amount):
-    """Add specified amount of harm to your sheet.
-    Also calculates and return warning if you're going to die"""
+    """Add specified amount of harm to your character.
+    Also calculates and gives you a warning if you're going to die."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
     if not character.check_if_exists():
@@ -372,9 +390,14 @@ async def takeharm(ctx: commands.Context, amount):
         else:
             await ctx.reply(f'You take {amount}-harm. Ouch!')
 
-@bot.command()
+@takeharm.error
+async def take_harm_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the amount of harm to take. Example: `{PREFIX}takeharm 2`")
+
+@bot.command(usage = f"{PREFIX}healharm <amount>")
 async def healharm(ctx: commands.Context, amount):
-    """Heal specified amount of harm on your sheet."""
+    """Heal specified amount of harm on your character."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
     if not character.check_if_exists():
@@ -421,9 +444,14 @@ async def healharm(ctx: commands.Context, amount):
         else:
             await ctx.reply(f'You heal {amount}-harm. Nice.')
 
-@bot.command()
+@healharm.error
+async def heal_harm_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the amount of harm to heal. Example: `{PREFIX}healharm 2`")
+
+@bot.command(usage = f"{PREFIX}fullheal")
 async def fullheal(ctx: commands.Context):
-    """Full heal your character"""
+    """Fully heals your character."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
     if not character.check_if_exists():
@@ -449,9 +477,9 @@ async def fullheal(ctx: commands.Context):
         else:
             await ctx.reply(f'You\'re now fully healed.')
 
-@bot.command()
+@bot.command(usage = f"{PREFIX}fullhealc", hidden=True)
 async def fullhealc(ctx: commands.Context):
-    """Full heal your character, including debilities"""
+    """Fully heals your character, including debilities."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
     if not character.check_if_exists():
@@ -475,10 +503,14 @@ async def fullhealc(ctx: commands.Context):
         else:
             await ctx.reply(f'You\'re now fully healed.')
 
-@bot.command()
+@bot.command(usage = f"{PREFIX}hxinfo [name]")
 async def hxinfo(ctx: commands.Context, name: str = None):
-    """Returns all hx info from a character. If a user is
-    tagged, it returns the hx towards that character."""
+    """Lists all HX info from your character. If a character's name
+    is used as argument, it lists only the HX towards that character.
+    
+    Examples:
+    `!hxinfo` - Shows all HX info
+    `!hxinfo \"Will Smith\"` - Shows the HX towards Will Smith"""
 
     author = str(ctx.author.id)
     server = str(ctx.guild.id)
@@ -510,9 +542,18 @@ async def hxinfo(ctx: commands.Context, name: str = None):
     embed = dc.Embed.from_dict(page_manager.get_embed_dict())
     await ctx.reply(embed=embed)
 
-@bot.command()
+@bot.command(usage = f"{PREFIX}hxinfo <name> <amount> [| <name> <amount>]...")
 async def hxadjust(ctx: commands.Context, *args: str):
-    """Adjusts hx towards other characters"""
+    """Adjusts HX towards other characters. Can specify
+    multiple characters at once by separating the \"character name, value\"
+    pair with \"|\". If the amount is -4 or 4, it will set to 
+    -1 and 1 respectively, and _warn_ you that you can get exp points
+    for that (it will not give you exp automatically).
+    
+    Example:
+    !hxadjust "Will Smith" 1 - Set HX towards Will Smith to 1.
+    !hxadjust "Will Smith" 1 | "Leonardo Dicaprio" 3 - Set HX 
+        towards Will Smith to 1 and 3 towards Leonardo Dicaprio."""
 
     if not args:
         await ctx.reply("Please provide at least one pair of character_name and number to adjust HX.")
@@ -577,6 +618,29 @@ async def snow(ctx):
     """Test command. Should be removed for release"""
     print('@' + str(ctx.author.name))
     await ctx.send(content=f'@{ctx.author.name}')
+
+@bot.command(usage=f"{PREFIX}help [command]")
+async def help(ctx: commands.Context, cmd = None):
+    """Shows this command."""
+
+    if not cmd:
+        # Show help message for all available commands
+        cmd_names = ' '.join(f"`{cmd.name}`" for cmd in bot.commands)
+        em = dc.Embed(title="Help", description=f"Use `{PREFIX}help <command>` extended information on a command.", color=ctx.author.color)
+        em.add_field(name="Commands", value=f"{cmd_names}")
+        await ctx.reply(embed = em)
+    else:
+        # Show help message for a specific command
+        cmd_obj = bot.get_command(cmd)
+        if not cmd_obj:
+            em = dc.Embed(title="Help", description=f"Use `{PREFIX}help <command>` extended information on a command.", color=ctx.author.color)
+            em.add_field(name="Error", value=f'Command `{cmd}` not found.')
+            await ctx.reply(embed = em)
+        else:
+            em = dc.Embed(title=f"**{cmd_obj.name}**", description=f"{cmd_obj.help}")
+            em.add_field(name="**Syntax**", value=f"`{cmd_obj.usage}`")
+            await ctx.send(embed=em)
+
 
 # Helper functions
 async def add_arrows(message: dc.Message):
