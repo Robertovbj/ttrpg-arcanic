@@ -91,11 +91,11 @@ class Character:
     def update_hx(self, pair_list):
 
         self.db.conn.execute('BEGIN')
-        update_query = "UPDATE HX SET HX_VALUE = ? WHERE FK_CHR_ID_FROM = (SELECT c1.CHR_ID FROM CHARACTERS c1 WHERE c1.CHR_USER_ID = ? AND c1.CHR_SERVER_ID = ?) AND FK_CHR_ID_TO = (SELECT c2.CHR_ID FROM CHARACTERS c2 WHERE c2.CHR_NAME = ? AND c2.CHR_SERVER_ID = ?)"
+        update_query = "INSERT INTO HX (FK_CHR_ID_FROM, FK_CHR_ID_TO, HX_VALUE) VALUES ((SELECT c1.CHR_ID FROM CHARACTERS c1 WHERE c1.CHR_USER_ID = ? AND c1.CHR_SERVER_ID = ?), (SELECT c2.CHR_ID FROM CHARACTERS c2 WHERE c2.CHR_NAME = ? AND c2.CHR_SERVER_ID = ?), ?) ON CONFLICT(FK_CHR_ID_FROM, FK_CHR_ID_TO) DO UPDATE SET HX_VALUE = EXCLUDED.HX_VALUE"
 
         try:
             for pair in pair_list:
-                self.db.cursor.execute(update_query, (pair[1], self.user, self.server, pair[0], self.server))
+                self.db.cursor.execute(update_query, (self.user, self.server, pair[0], self.server, pair[1]))
         except sqlite3.Error as e:
             print(e)
             self.db.conn.rollback()
