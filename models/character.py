@@ -57,6 +57,16 @@ class Character:
         exp = exp % 5
         self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_EXP = exp, CHR_IMPROVEMENT = imp)
         return imp
+    
+    def get_barter(self) -> int:
+        """Returns character barter"""
+        query = self.db.select("CHARACTERS", columns=["CHR_BARTER"], where=f"CHR_SERVER_ID = {self.server} AND CHR_USER_ID = {self.user}")
+        return query[0][0]
+
+    def add_barter(self, amount: int) -> int:
+        barter = self.get_barter() + amount
+        self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_BARTER = barter)
+        return barter
 
     def get_harms(self) -> tuple:
         """Returns character harms"""

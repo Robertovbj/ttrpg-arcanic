@@ -106,6 +106,9 @@ async def createsheet(ctx: commands.Context, name: str):
     if character.check_if_exists():
         await ctx.reply("You already have a character sheet created in this server.")
         return
+    if character.check_if_exists_name(name):
+        await ctx.reply(f"A character named {name} already exists on this server. Please use another name.")
+        return
 
     playbooks = Playbook().get_playbooks()
     playbook_count = len(playbooks)
@@ -268,6 +271,40 @@ async def getexp(ctx: commands.Context, amount):
 async def get_exp_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}getexp 2`")
+
+@bot.command(usage = f"{PREFIX}getbarter <amount>")
+async def getbarter(ctx: commands.Context, amount):
+    """Add specified amount of barter to your character."""
+    
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    try:
+        # Deals with the possibility of wrong user input
+        amount = int(amount)
+    except:
+        await ctx.reply(f"To get barter, please follow the example: `{PREFIX}getbarter 2`")
+        return
+    
+    if amount < 1:
+        await ctx.reply(f"Barter amount needs to be a positive integer.")
+        return
+    
+    try:
+        barter = character.add_barter(amount)
+    except:
+        await ctx.reply(f'Sorry, something went wrong.')
+        return
+    else:
+        await ctx.reply(f'{amount}-barter added. You have now {barter}-barter.')
+
+@getbarter.error
+async def get_barter_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}getbarter 2`")
 
 @bot.command(usage = f"{PREFIX}moves")
 async def moves(ctx: commands.Context):
@@ -640,7 +677,6 @@ async def help(ctx: commands.Context, cmd = None):
             em = dc.Embed(title=f"**{cmd_obj.name}**", description=f"{cmd_obj.help}")
             em.add_field(name="**Syntax**", value=f"`{cmd_obj.usage}`")
             await ctx.send(embed=em)
-
 
 # Helper functions
 async def add_arrows(message: dc.Message):
