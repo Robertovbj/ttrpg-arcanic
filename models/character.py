@@ -65,7 +65,8 @@ class Character:
 
     def add_barter(self, amount: int) -> int:
         barter = self.get_barter() + amount
-        self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_BARTER = barter)
+        if barter > -1:
+            self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_BARTER = barter)
         return barter
 
     def get_harms(self) -> tuple:

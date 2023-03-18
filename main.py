@@ -306,6 +306,44 @@ async def get_barter_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}getbarter 2`")
 
+@bot.command(usage = f"{PREFIX}usebarter <amount>")
+async def usebarter(ctx: commands.Context, amount):
+    """Spends specified amount of barter."""
+    
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    try:
+        # Deals with the possibility of wrong user input
+        amount = int(amount)
+    except:
+        await ctx.reply(f"To spend barter, please follow the example: `{PREFIX}usebarter 2`")
+        return
+    
+    if amount < 1:
+        await ctx.reply(f"Barter amount needs to be a positive integer.")
+        return
+    
+    try:
+        barter = character.add_barter(-amount)
+    except:
+        await ctx.reply(f'Sorry, something went wrong.')
+        return
+    else:
+        if barter < 0:
+            await ctx.reply(f"You can't have negative barter.")
+        else:
+            await ctx.reply(f'{amount}-barter spent. You have now {barter}-barter.')
+
+@usebarter.error
+async def use_barter_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the amount of exp to spend. Example: `{PREFIX}usebarter 2`")
+
+
 @bot.command(usage = f"{PREFIX}moves")
 async def moves(ctx: commands.Context):
     """Lists all moves available."""
