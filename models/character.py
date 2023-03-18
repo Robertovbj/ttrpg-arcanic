@@ -84,9 +84,31 @@ class Character:
         """Gets all hx from a character"""
         return self.db.select("CHARACTERS AS cto, CHARACTERS AS cfrom, HX AS h", columns=["cfrom.CHR_NAME", "cto.CHR_NAME", "h.HX_VALUE"], where=f"cfrom.CHR_USER_ID = {self.user} AND cfrom.CHR_SERVER_ID = {self.server} AND cto.CHR_SERVER_ID = cfrom.CHR_SERVER_ID AND cfrom.CHR_ID = h.FK_CHR_ID_FROM AND cto.CHR_ID = h.FK_CHR_ID_TO")
 
-    def get_hx_ind(self, id_to: int):
+    def get_hx_ind(self, name_to: int):
         """Gets hx from a character to another"""
-        return self.db.select("CHARACTERS AS cto, CHARACTERS AS cfrom, HX AS h", columns=["cfrom.CHR_NAME", "cto.CHR_NAME", "h.HX_VALUE"], where=f"cfrom.CHR_USER_ID = {self.user} AND cfrom.CHR_SERVER_ID = {self.server} AND cto.CHR_SERVER_ID = cfrom.CHR_SERVER_ID AND cfrom.CHR_ID = h.FK_CHR_ID_FROM AND cto.CHR_ID = h.FK_CHR_ID_TO AND cto.CHR_USER_ID = {id_to}")
+        return self.db.select("CHARACTERS AS cto, CHARACTERS AS cfrom, HX AS h", columns=["cfrom.CHR_NAME", "cto.CHR_NAME", "h.HX_VALUE"], where=f"cfrom.CHR_USER_ID = {self.user} AND cfrom.CHR_SERVER_ID = {self.server} AND cto.CHR_SERVER_ID = cfrom.CHR_SERVER_ID AND cfrom.CHR_ID = h.FK_CHR_ID_FROM AND cto.CHR_ID = h.FK_CHR_ID_TO AND cto.CHR_NAME = '{name_to}'")
+
+    def update_hx(self, pair_list):
+
+        self.db.conn.execute('BEGIN')
+        update_query = "UPDATE HX SET HX_VALUE = ? WHERE FK_CHR_ID_FROM = (SELECT c1.CHR_ID FROM CHARACTERS c1 WHERE c1.CHR_USER_ID = ? AND c1.CHR_SERVER_ID = ?) AND FK_CHR_ID_TO = (SELECT c2.CHR_ID FROM CHARACTERS c2 WHERE c2.CHR_NAME = ? AND c2.CHR_SERVER_ID = ?)"
+
+        try:
+            for pair in pair_list:
+                self.db.cursor.execute(update_query, (pair[1], self.user, self.server, pair[0], self.server))
+        except sqlite3.Error as e:
+            print(e)
+            self.db.conn.rollback()
+            return "Sorry, something went wrong. Maybe you typed some character's name wrong."
+        
+        self.db.conn.commit()
+        self.db.close()
+        return None
+
+    def check_if_exists_name(self, name) -> int:
+        """Returns 0 if the user doesn't have a character in the server. Returns 1 otherwise."""
+        return self.db.select("CHARACTERS", columns=["COUNT(*)"], where=f"CHR_SERVER_ID = {self.server} AND CHR_NAME = '{name}'")[0][0]
+
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):

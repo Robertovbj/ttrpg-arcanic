@@ -476,7 +476,7 @@ async def fullhealc(ctx: commands.Context):
             await ctx.reply(f'You\'re now fully healed.')
 
 @bot.command()
-async def hxinfo(ctx: commands.Context, tag: dc.Member = None):
+async def hxinfo(ctx: commands.Context, name: str = None):
     """Returns all hx info from a character. If a user is
     tagged, it returns the hx towards that character."""
 
@@ -491,11 +491,14 @@ async def hxinfo(ctx: commands.Context, tag: dc.Member = None):
         return
 
     pages = []
-    if tag is None:
+    if name is None:
         hx = character.get_hx_list()
         pages = [HxPage(hx)]
     else: 
-        hx = character.get_hx_ind(tag.id)
+        if not character.check_if_exists_name(name):
+            await ctx.reply(f"No character named {name} found on this server.")
+            return
+        hx = character.get_hx_ind(name)
         if not len(hx) == 0 and not hx[0][2] == 0:
             pages = [HxPage(hx)]
         else:
@@ -506,13 +509,68 @@ async def hxinfo(ctx: commands.Context, tag: dc.Member = None):
 
     embed = dc.Embed.from_dict(page_manager.get_embed_dict())
     await ctx.reply(embed=embed)
+
+@bot.command()
+async def hxadjust(ctx: commands.Context, *args: str):
+    """Adjusts hx towards other characters"""
+
+    if not args:
+        await ctx.reply("Please provide at least one pair of character_name and number to adjust HX.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    args_pairs = []
+    exp_message = ""
+
+    try:
+        for i in range(0, len(args), 3):
+            value = int(args[i+1])
+            name = args[i]
+            if not character.check_if_exists_name(name):
+                await ctx.reply(f"No character named {name} found on this server.")
+                return
+            if value > 4 or value < -4:
+                await ctx.reply(f"The HX value should be between -4 and 4.")
+                return
+            if value == -4:
+                exp_message += f"you achieved -4 HX with {name}\n"
+                value = -1
+            if value == 4:
+                exp_message += f"you achieved 4 HX with {name}\n"
+                value = 1
+            args_pairs.append([name, value])
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}hxadjust "character name 1" 2 | "character name 2" 1```')
+        return
+
+    message = character.update_hx(args_pairs)
+
+    if message is None:
+        if not exp_message == "":
+            exp_message = " You also got 1 exp for each of the following:\n" + exp_message + "All values were reseted to -1 or 1 accordingly. (You need to get your exp manually. This is just a warning)"
+        await ctx.reply(f"HX adjusted successfully.{exp_message}")
+    else:
+        await ctx.reply(message)
+
+@bot.command()
+async def learnmoves(ctx: commands.Context, *args: str):
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
     
-@hxinfo.error
-async def hxinfo_error(ctx, error):
-    if isinstance(error, commands.BadArgument):
-        await ctx.send("Sorry, I couldn't find that member on this server.")
-    elif isinstance(error, commands.MemberNotFound):
-        await ctx.send("Sorry, I couldn't find that member on this server.")
+    # Makes a string like 'Move 1|Move 2|Move 3' and then splits it on '|'s
+    # returning a list
+    arg_list = "".join(args).split("|")
+    # for arg in arg_list:
+    #     await ctx.send(f"Argument is: {arg}")
 
 @bot.command()
 async def snow(ctx):
