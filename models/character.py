@@ -106,7 +106,7 @@ class Character:
         return None
 
     def check_if_exists_name(self, name) -> int:
-        """Returns 0 if the user doesn't have a character in the server. Returns 1 otherwise."""
+        """Returns 0 if theresn't a character with the specified name on the server. Returns 1 otherwise."""
         return self.db.select("CHARACTERS", columns=["COUNT(*)"], where=f"CHR_SERVER_ID = {self.server} AND CHR_NAME = '{name}'")[0][0]
 
 
