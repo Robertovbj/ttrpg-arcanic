@@ -31,8 +31,8 @@ async def checksheet(ctx: commands.Context, char: str = None):
     the named character's sheet instead.
     
     Examples:
-    !checksheet - Shows your character's full sheet
-    !checksheet "Will Smith" - Shows Will Smith's full sheet"""
+    `!checksheet` - Shows your character's full sheet
+    `!checksheet "Will Smith"` - Shows Will Smith's full sheet"""
     
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -86,6 +86,7 @@ async def checksheet(ctx: commands.Context, char: str = None):
 async def createsheet(ctx: commands.Context, name: str):
     '''Create a new character with the specified name.
     To use two or more names, encase them with quotes.
+    Only **ONE** character is allowed per server.
     
     Example:
     `!createsheet "Will Smith"`'''
@@ -193,8 +194,9 @@ async def createsheet(ctx: commands.Context, name: str):
             }
 
             text = character.create_new(data)
+            quarantine = '' if playbook_choice != 15 else ' and, since you\'re a Quarantine, to set your "Weird" stats manually.'
 
-            await ctx.reply("Character created successfully" if text == None else text)
+            await ctx.reply(f"Character created successfully. Don't forget to get your skills{quarantine}." if text == None else text)
 
 @createsheet.error
 async def create_sheet_error(ctx: commands.Context, error):
@@ -227,8 +229,8 @@ async def deletesheet(ctx: commands.Context):
         except:
             await ctx.send('Something went wrong.')
 
-@bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}getexp <amount>")
-async def getexp(ctx: commands.Context, amount):
+@bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}addexp <amount>")
+async def addexp(ctx: commands.Context, amount):
     """Add specified amount of exp to your character.
     Also calculates and shows the amount of improvement points."""
     
@@ -242,7 +244,7 @@ async def getexp(ctx: commands.Context, amount):
         # Deals with the possibility of wrong user input
         amount = int(amount)
     except:
-        await ctx.reply(f"To get exp, please follow the example: ```{PREFIX}getexp 2```")
+        await ctx.reply(f"To get exp, please follow the example: ```{PREFIX}addexp 2```")
         return
     
     try:
@@ -256,14 +258,14 @@ async def getexp(ctx: commands.Context, amount):
             imp_text = f" You have {imp} improvement points."
         await ctx.reply(f'{amount} points of exp added.{imp_text}')
 
-@getexp.error
-async def get_exp_error(ctx: commands.Context, error):
+@addexp.error
+async def add_exp_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}getexp 2`")
+        await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}addexp 2`")
 
-@bot.command(usage = f"{PREFIX}getbarter <amount>")
-async def getbarter(ctx: commands.Context, amount):
-    """Add specified amount of barter to your character."""
+@bot.command(usage = f"{PREFIX}addbarter <amount>")
+async def addbarter(ctx: commands.Context, amount):
+    """Adds specified amount of barter to your character."""
     
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -275,7 +277,7 @@ async def getbarter(ctx: commands.Context, amount):
         # Deals with the possibility of wrong user input
         amount = int(amount)
     except:
-        await ctx.reply(f"To get barter, please follow the example: `{PREFIX}getbarter 2`")
+        await ctx.reply(f"To get barter, please follow the example: `{PREFIX}addbarter 2`")
         return
     
     if amount < 1:
@@ -290,10 +292,10 @@ async def getbarter(ctx: commands.Context, amount):
     else:
         await ctx.reply(f'{amount}-barter added. You have now {barter}-barter.')
 
-@getbarter.error
+@addbarter.error
 async def get_barter_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}getbarter 2`")
+        await ctx.reply(f"Please specify the amount of exp to get. Example: `{PREFIX}addbarter 2`")
 
 @bot.command(usage = f"{PREFIX}usebarter <amount>")
 async def usebarter(ctx: commands.Context, amount):
@@ -573,7 +575,7 @@ async def hxinfo(ctx: commands.Context, name: str = None):
     
     Examples:
     `!hxinfo` - Shows all HX info
-    `!hxinfo \"Will Smith\"` - Shows the HX towards Will Smith"""
+    `!hxinfo "Will Smith"` - Shows the HX towards Will Smith"""
 
     author = str(ctx.author.id)
     server = str(ctx.guild.id)
@@ -608,14 +610,14 @@ async def hxinfo(ctx: commands.Context, name: str = None):
 @bot.command(usage = f"{PREFIX}hxinfo <name> <amount> [| <name> <amount>]...")
 async def hxadjust(ctx: commands.Context, *args: str):
     """Adjusts HX towards other characters. Can specify
-    multiple characters at once by separating the \"character name, value\"
-    pair with \"|\". If the amount is -4 or 4, it will set to 
+    multiple characters at once by separating the "character name, value"
+    pair with "|". If the amount is -4 or 4, it will set to 
     -1 and 1 respectively, and _warn_ you that you can get exp points
     for that (it will not give you exp automatically).
     
     Example:
-    !hxadjust "Will Smith" 1 - Set HX towards Will Smith to 1.
-    !hxadjust "Will Smith" 1 | "Leonardo Dicaprio" 3 - Set HX 
+    `!hxadjust "Will Smith" 1` - Set HX towards Will Smith to 1.
+    `!hxadjust "Will Smith" 1` | "Leonardo Dicaprio" 3 - Set HX 
         towards Will Smith to 1 and 3 towards Leonardo Dicaprio."""
 
     if not args:
@@ -698,14 +700,14 @@ async def myimprovements(ctx: commands.Context):
 @bot.command(usage = f"{PREFIX}improve <number> [| <number>]...")
 async def improve(ctx: commands.Context, *args: str):
     """Get the specified improvement. Can specify
-    multiple improvements at once by separating the \"value\"
-    with \"|\". The number must be between 1 and 16 (both included).
+    multiple improvements at once by separating the "value"
+    with "|". The number must be between 1 and 16 (both included).
     It will **_NOT_** add the stats to your sheet if the improvement
     says you should, it must be done manually.
     
     Example:
-    !improve 1 - Get the first improvement.
-    !improve 1 | 3 - Get the first and the third improvements."""
+    `!improve 1` - Get the first improvement.
+    `!improve 1 | 3` - Get the first and the third improvements."""
 
     if not args:
         await ctx.reply("Please provide at least one improvement to add.")
@@ -757,14 +759,14 @@ async def improve(ctx: commands.Context, *args: str):
 @bot.command(usage = f"{PREFIX}removeimprovement <number> [| <number>]...")
 async def removeimprovement(ctx: commands.Context, *args: str):
     """Remove the specified improvement. Can specify
-    multiple improvements at once by separating the \"value\"
-    with \"|\". The number must be between 1 and 16 (both included).
+    multiple improvements at once by separating the "value"
+    with "|". The number must be between 1 and 16 (both included).
     It will **_NOT_** remove the stats from your sheet if the improvement
     was about adding it, it must be done manually.
     
     Example:
-    !removeimprovement 1 - Remove the first improvement.
-    !removeimprovement 1 | 3 - Remove the first and the third improvements."""
+    `!removeimprovement 1` - Remove the first improvement.
+    `!removeimprovement 1 | 3` - Remove the first and the third improvements."""
 
     if not args:
         await ctx.reply("Please provide at least one improvement to remove.")
