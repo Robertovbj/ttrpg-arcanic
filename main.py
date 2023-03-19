@@ -274,7 +274,7 @@ async def adjuststats(ctx: commands.Context, *args: str):
     
     Example:
     `!adjuststats Cool 1` - Set Cool to 1.
-    `!adjuststats Cool 1` | Hot 3` - Set Cool to 1 and Hot to 3."""
+    `!adjuststats Cool 1 | Hot 3` - Set Cool to 1 and Hot to 3."""
 
     if not args:
         await ctx.reply("Please provide at least one pair of stat_name and value to adjust stats.")
@@ -760,7 +760,7 @@ async def hxadjust(ctx: commands.Context, *args: str):
     
     Example:
     `!hxadjust "Will Smith" 1` - Set HX towards Will Smith to 1.
-    `!hxadjust "Will Smith" 1` | "Leonardo Dicaprio" 3 - Set HX 
+    `!hxadjust "Will Smith" 1 | "Leonardo Dicaprio" 3` - Set HX 
         towards Will Smith to 1 and 3 towards Leonardo Dicaprio."""
 
     if not args:
