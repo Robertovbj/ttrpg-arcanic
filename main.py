@@ -706,6 +706,119 @@ async def myimprovements(ctx: commands.Context):
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     await ctx.reply(embed=embed)
 
+@bot.command(usage = f"{PREFIX}improve <number> [| <number>]...")
+async def improve(ctx: commands.Context, *args: str):
+    """Get the specified improvement. Can specify
+    multiple improvements at once by separating the \"value\"
+    with \"|\". The number must be between 1 and 16 (both included).
+    It will **_NOT_** add the stats to your sheet if the improvement
+    says you should, it must be done manually.
+    
+    Example:
+    !improve 1 - Get the first improvement.
+    !improve 1 | 3 - Get the first and the third improvements."""
+
+    if not args:
+        await ctx.reply("Please provide at least one improvement to add.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    args_imp = []
+    my_improvements = character.get_improvements()
+    _, imp_points = character.get_exp()
+
+    try:
+        for i in range(0, len(args), 2):
+            value = int(args[i])
+            if value < 1 or value > 16:
+                await ctx.reply(f"The improvement number must between 1 and 16 (both included).")
+                return
+            if my_improvements[value-1][0] == 1:
+                await ctx.reply(f"You already have the '{my_improvements[value-1][1]}' improvement.")
+                return
+            args_imp.append(my_improvements[value-1][2])
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}improve 1 | 2```')
+        return
+
+    message = ''
+
+    confirmation_bot = await ctx.reply(content=f"Please check if you typed the right improvements and confirm 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        if len(args_imp) > imp_points:
+            await ctx.reply("Sorry, it seems you don't have enough improvement points.")
+        else:
+            message = character.add_improvement(args_imp)
+
+        if message is None:
+            await ctx.reply(f"You improved successfully (Remember to add the stat to your sheet if thats the case, this action is **_NOT_** done automatically).")
+        else:
+            await ctx.reply(message)
+
+@bot.command(usage = f"{PREFIX}removeimprovement <number> [| <number>]...")
+async def removeimprovement(ctx: commands.Context, *args: str):
+    """Remove the specified improvement. Can specify
+    multiple improvements at once by separating the \"value\"
+    with \"|\". The number must be between 1 and 16 (both included).
+    It will **_NOT_** remove the stats from your sheet if the improvement
+    was about adding it, it must be done manually.
+    
+    Example:
+    !removeimprovement 1 - Remove the first improvement.
+    !removeimprovement 1 | 3 - Remove the first and the third improvements."""
+
+    if not args:
+        await ctx.reply("Please provide at least one improvement to remove.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    args_imp = []
+    my_improvements = character.get_improvements()
+
+    try:
+        for i in range(0, len(args), 2):
+            value = int(args[i])
+            if value < 1 or value > 16:
+                await ctx.reply(f"The improvement number must between 1 and 16 (both included).")
+                return
+            if my_improvements[value-1][0] != 1:
+                await ctx.reply(f"You don't have the '{my_improvements[value-1][1]}' improvement.")
+                return
+            args_imp.append(my_improvements[value-1][2])
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}removeimprovement 1 | 2```')
+        return
+
+    confirmation_bot = await ctx.reply(content=f"This action should only be used in case of error while getting a improvement. You'll also get your improvement points back. Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        message = character.remove_improvement(args_imp)
+
+        if message is None:
+            await ctx.reply(f"Improvements removed successfully. {len(args_imp)} improvement points added back to your sheet. (Remember to remove the stat from your sheet if thats the case, this action is **_NOT_** done automatically).")
+        else:
+            await ctx.reply(message)
+
+
 @bot.command()
 async def snow(ctx):
     """Test command. Should be removed for release"""

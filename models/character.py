@@ -48,7 +48,7 @@ class Character:
         id = self.get_character_id()
         self.db.delete("CHARACTERS", 'CHR_ID', id)
 
-    def get_exp(self) -> int:
+    def get_exp(self) -> tuple[int, int]:
         """Returns character exp"""
         query = self.db.select("CHARACTERS", columns=["CHR_EXP", "CHR_IMPROVEMENT"], where=f"CHR_SERVER_ID = {self.server} AND CHR_USER_ID = {self.user}")
         return query[0][0], query[0][1]
@@ -125,7 +125,45 @@ class Character:
 
     def get_improvements(self) -> list[tuple]:
         """Gets this character's improvements"""
-        return self.db.select("CHARACTERS, CHARACTER_IMPROVEMENTS, IMPROVEMENTS", columns=["CHI_CHECKED", "IMP_TEXT"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND CHR_ID = FK_CHR_ID AND FK_IMP_ID = IMP_ID;")
+        return self.db.select("CHARACTERS, CHARACTER_IMPROVEMENTS, IMPROVEMENTS", columns=["CHI_CHECKED", "IMP_TEXT", "CHI_ID"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND CHR_ID = FK_CHR_ID AND FK_IMP_ID = IMP_ID;")
+
+    def add_improvement(self, number_list: list):
+        """Adds improvements to the character"""
+        self.db.conn.execute('BEGIN')
+        update_query = "UPDATE CHARACTER_IMPROVEMENTS SET CHI_CHECKED = 1 WHERE CHI_ID = ?"
+        update_imp = "UPDATE CHARACTERS SET CHR_IMPROVEMENT = CHR_IMPROVEMENT - ? WHERE CHR_USER_ID = ? AND CHR_SERVER_ID = ?"
+
+        try:
+            for number in number_list:
+                self.db.cursor.execute(update_query, (number,))
+        except sqlite3.Error as e:
+            print(e)
+            self.db.conn.rollback()
+            return "Sorry, something went wrong. Maybe you typed some character's name wrong."
+        self.db.cursor.execute(update_imp, (len(number_list), self.user, self.server))
+
+        self.db.conn.commit()
+        self.db.close()
+        return None
+    
+    def remove_improvement(self, number_list: list):
+        """Removes improvements from the character"""
+        self.db.conn.execute('BEGIN')
+        update_query = "UPDATE CHARACTER_IMPROVEMENTS SET CHI_CHECKED = 0 WHERE CHI_ID = ?"
+        update_imp = "UPDATE CHARACTERS SET CHR_IMPROVEMENT = CHR_IMPROVEMENT + ? WHERE CHR_USER_ID = ? AND CHR_SERVER_ID = ?"
+
+        try:
+            for number in number_list:
+                self.db.cursor.execute(update_query, (number,))
+        except sqlite3.Error as e:
+            print(e)
+            self.db.conn.rollback()
+            return "Sorry, something went wrong. Maybe you typed some character's name wrong."
+        self.db.cursor.execute(update_imp, (len(number_list), self.user, self.server))
+
+        self.db.conn.commit()
+        self.db.close()
+        return None
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
