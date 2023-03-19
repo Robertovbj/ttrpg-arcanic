@@ -24,74 +24,56 @@ bot = commands.Bot( command_prefix=f'{PREFIX}', intents=intents )
 bot.remove_command("help")
 db = Database()
 
-# @bot.command()
-# async def checksheet(ctx):
-
-    # embed=dc.Embed(title="Name: Dou", description="Playbook: The Angel", color=0xff3838)
-    # embed.set_author(name=f'@user')
-    # embed.set_thumbnail(url="https://i.imgur.com/fAi8DsQ.png")
-    # embed.add_field(name="STATS", value="stats here\nfstsd", inline=True)
-
-    # msg = await ctx.send( embed=embed )
-    # await msg.add_reaction(emojis.EMOJI_LEFT)
-    # await msg.add_reaction(emojis.EMOJI_RIGHT) 
-
-    # def check(reaction, user):
-    #     return reaction.message.id == msg.id and str(reaction.emoji) in [emojis.EMOJI_LEFT, emojis.EMOJI_RIGHT]
-
-    # reaction, user = await bot.wait_for('reaction_add', check=check)
-    # if str(reaction.emoji) == emojis.EMOJI_LEFT:
-    #     await ctx.send(f'Thanks for the thumbs up, {user.mention}!')
-    # elif str(reaction.emoji) == emojis.EMOJI_RIGHT:
-    #     await ctx.send(f'Sorry you didn\'t like it, {user.mention}!')
-
-# @bot.command()
-# async def checksheet(ctx: commands.Context, tag: dc.User = None):
+@bot.command()
+async def checksheet(ctx: commands.Context, char: str = None):
     
-#     author = ''
-#     server = str(ctx.guild.id)
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
 
-#     try:
-#         if tag is None:
-#             author = str(ctx.author.id)
-#         elif not isinstance(tag, dc.User):
-#             await ctx.reply("To check someone's else sheet, please use ```/checksheet @user```")
-#             return
-#         else:
-#             author = str(tag.id)
-#     except commands.errors.UserNotFound:
-#         print('test')
-#         await ctx.reply("User not found.")
-#         return
-
-#     if not Character().check_if_exists(author, server):
-#         await ctx.reply("No character found on this server.")
-#         return
+    if char is None: # Checking for author's character
+        if not character.check_if_exists():
+            await ctx.reply("No character found on this server.")
+            return
+    else:
+        if not character.check_if_exists_name(char):
+            await ctx.reply(f"No character named {char} found on this server.")
+            return
+        character.change_user_by_name(char)
     
+    char_info = character.get_basic_profile()
+
+    # Gets this character moves and sets it
+    moves, special = character.get_char_moves()
+    playbooks = Playbook().get_names()
+    playbooks.insert(0, (0, "Basic"))
+
+    moves_txt = ''
     
+    for i in range(len(moves)):
+        moves_txt += f"{moves[i][1]}\n" if moves[i-1][2] == moves[i][2] and i != 0 else f"\n**{playbooks[moves[i][2]][1]}**\n{moves[i][1]}\n"
 
-#     pages = [
-#         StatsPage(),
-#         HxPage(),
-#         HarmPage(),
-#         MovesPage(),
-#         ImprovementPage(),
-#         InventoryPage()
-#     ]
-#     page_manager = PageManager("Name: Dou", "Playbook: The Angel", pages)
+    pages = [
+        StatsPage(character.get_stats()),
+        HxPage(character.get_hx_list()),
+        HarmPage(character.get_harms()),
+        MovesPage(moves_txt, special),
+        ImprovementPage(*character.get_exp(), character.get_improvements()),
+        InventoryPage(character.get_inventory(), character.get_barter())
+    ]
 
-#     embed = dc.Embed.from_dict(page_manager.get_embed_dict())
-#     msg = await ctx.reply(embed=embed)
+    page_manager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
 
-#     await add_arrows(msg)
+    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+    msg = await ctx.reply(embed=embed)
 
-#     while True:
-#         try:
-#             reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=lambda r, u: check(r, u, ctx, emojis.ARROWS_LIST))
+    await add_arrows(msg)
 
-#             await turn_pages(msg, reaction, user, page_manager)
-#         except:
-#             break
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST, msg))
+
+            await turn_pages(msg, reaction, user, page_manager)
+        except:
+            break
 
 @bot.command(usage=f"{PREFIX}createsheet <name>")
 async def createsheet(ctx: commands.Context, name: str):
@@ -136,7 +118,7 @@ async def createsheet(ctx: commands.Context, name: str):
 
     while True:
         try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST + emojis.NUMBER_LIST))
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST + emojis.NUMBER_LIST, msg))
 
             if str(reaction) in emojis.ARROWS_LIST:
                 await turn_pages(msg, reaction, user, pageManager)
@@ -179,7 +161,7 @@ async def createsheet(ctx: commands.Context, name: str):
 
         while True:
             try:
-                reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.NUMBER_LIST[0:4]))
+                reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.NUMBER_LIST[0:4], msg))
 
                 if str(reaction) in emojis.NUMBER_LIST[0:4]:
                     set_choice = emojis.NUMBER_LIST.index(str(reaction))+1
@@ -362,7 +344,7 @@ async def moves(ctx: commands.Context):
 
     while True:
         try:
-            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST))
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST, msg))
 
             await turn_pages(msg, reaction, user, page_manager)
         except:
@@ -864,10 +846,10 @@ async def turn_pages(message: dc.Message, reaction: dc.Reaction, user: dc.User |
     await message.edit(embed=embed)
     await message.remove_reaction(reaction, user)
 
-def check_reaction(reaction: dc.Reaction, user: dc.User | dc.Member, ctx: commands.Context, emojis_list: list[str]) -> bool:
+def check_reaction(reaction: dc.Reaction, user: dc.User | dc.Member, ctx: commands.Context, emojis_list: list[str], message: dc.Message) -> bool:
     """Checks if it was the message author that reacted to 
     the message, and if the reaction is on the valid reactions list."""
-    return user == ctx.author and str(reaction.emoji) in emojis_list
+    return user == ctx.author and str(reaction.emoji) in emojis_list and reaction.message.id == message.id
 
 def check_confirm_message(message: dc.Message, ctx: commands.Context, text: str):
     return message.content == text and message.channel == ctx.channel and message.author == ctx.author
@@ -884,7 +866,6 @@ def iterate_moves(moves: list[tuple], playbooks: list[tuple], pages: list, speci
     for i in range(0, len(moves), 20):
         batch_moves = "\n".join(str(moves[j][1]) if moves[j-1][2] == moves[j][2] else f"\n**{playbooks[moves[j][2]][1]}**\n{moves[j][1]}" for j in range(i, len(moves[i:i+20])+i))
         if i == 0:
-            print(f"{batch_moves} \n\n {special}")
             pages.append(MovesPage(batch_moves, special))
         else:
             pages.append(MovesPage(batch_moves))

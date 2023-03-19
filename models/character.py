@@ -119,9 +119,13 @@ class Character:
         self.db.close()
         return None
 
-    def check_if_exists_name(self, name) -> int:
+    def check_if_exists_name(self, name: str) -> int:
         """Returns 0 if theresn't a character with the specified name on the server. Returns 1 otherwise."""
         return self.db.select("CHARACTERS", columns=["COUNT(*)"], where=f"CHR_SERVER_ID = {self.server} AND CHR_NAME = '{name}'")[0][0]
+
+    def change_user_by_name(self, name: str) -> str:
+        """Changes self.user to named character's user snowflake"""
+        self.user = self.db.select("CHARACTERS", columns=["CHR_USER_ID"], where=f"CHR_SERVER_ID = {self.server} AND CHR_NAME = '{name}'")[0][0]
 
     def get_improvements(self) -> list[tuple]:
         """Gets this character's improvements"""
@@ -164,6 +168,12 @@ class Character:
         self.db.conn.commit()
         self.db.close()
         return None
+    
+    def get_stats(self) -> list[tuple]:
+        return self.db.select("STATS, CHARACTERS", columns=["STT_HIGHLIGHT", "STT_VALUE", "STT_STAT"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND CHR_ID = FK_CHR_ID;")
+
+    def get_inventory(self) -> list[tuple]:
+        return self.db.select("ITEMS, CHARACTERS", columns=["ITM_NAME", "ITM_DESCRIPTION", "ITM_QUANTITY", "ITM_EQUIPED"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND CHR_ID = FK_CHR_ID;")
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
