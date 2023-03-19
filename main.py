@@ -266,6 +266,50 @@ async def highlight_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f'Please specify both stats to highlight as the following example: `{PREFIX}highlight Cool Weird`')
 
+@bot.command(usage=f"{PREFIX}adjuststats <name> <value> [| <name> <value>]...")
+async def adjuststats(ctx: commands.Context, *args: str):
+    """Adjust stats to specified number. Can specify
+    multiple stats at once by separating the "stat, value"
+    pair with "|".
+    
+    Example:
+    `!adjuststats Cool 1` - Set Cool to 1.
+    `!adjuststats Cool 1` | Hot 3` - Set Cool to 1 and Hot to 3."""
+
+    if not args:
+        await ctx.reply("Please provide at least one pair of stat_name and value to adjust stats.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    stats = []
+    values = []
+    possible_stats = ['cool', 'hard', 'hot', 'sharp', 'weird']
+
+    try:
+        for i in range(0, len(args), 3):
+            value = int(args[i+1])
+            name = lowercase_converter(args[i])
+            if name not in possible_stats:
+                await ctx.reply(f"There's no stat named {name}.")
+                return
+            stats.append(possible_stats.index(name)+1)
+            values.append(value)
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}adjuststats Cool 2 | Weird 1```')
+        return
+
+    message = character.adjust_stats(stats, values)
+
+    if message is None:
+        await ctx.reply(f"Stats adjusted successfully.")
+    else:
+        await ctx.reply(message)
+
 @bot.command(usage=f"{PREFIX}image <imgur_link>")
 async def image(ctx: commands.Context, link: str):
     """Changes your character image to a new one provided by
@@ -652,7 +696,7 @@ async def fullhealc(ctx: commands.Context):
 
 @bot.command(usage = f'{PREFIX}stabilize')
 async def stabilize(ctx: commands.Context):
-    """Adds or remove the _stabilized_ status from your character."""
+    """Adds or removes the _stabilized_ status from your character."""
 
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 

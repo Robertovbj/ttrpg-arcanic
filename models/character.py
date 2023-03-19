@@ -205,6 +205,22 @@ class Character:
     def set_image(self, url: str) -> None:
         self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_IMAGE = url)
 
+    def adjust_stats(self, stats: list, value: list) -> None:
+
+        id = self.get_character_id()
+        update_query = f"UPDATE STATS SET STT_VALUE = ? WHERE FK_CHR_ID = ? AND STT_STAT = ?;"
+        
+        try:
+            for i in range(len(stats)):
+                self.db.conn.execute(update_query, (value[i], id, stats[i]))
+        except:
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+    
+        self.db.conn.commit()
+        self.db.close()
+        return None
+
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
         super().__init__()
