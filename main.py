@@ -24,6 +24,9 @@ bot = commands.Bot( command_prefix=f'{PREFIX}', intents=intents )
 bot.remove_command("help")
 db = Database()
 
+def lowercase_converter(arg: str) -> str:
+    return arg.lower()
+
 @bot.command(usage=f"{PREFIX}checksheet [name]")
 async def checksheet(ctx: commands.Context, char: str = None):
     """Check your character's full sheet.
@@ -228,6 +231,40 @@ async def deletesheet(ctx: commands.Context):
             await ctx.send('Character deleted successfully.')
         except:
             await ctx.send('Something went wrong.')
+
+@bot.command(usage=f"{PREFIX}highlight <stat1> <stat2>")
+async def highlight(ctx: commands.Context, stat_one: lowercase_converter, stat_two: lowercase_converter):
+    """Highlights the two specified stats. Must inform both by name.
+    
+    Example:
+    `!highlight Cool Weird` - Highlights Cool and Weird stats."""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    possible_stats = ['cool', 'hard', 'hot', 'sharp', 'weird']
+    if stat_one not in possible_stats:
+        await ctx.reply(f"There's no stat named {stat_one}.")
+        return
+    if stat_two not in possible_stats:
+        await ctx.reply(f"There's no stat named {stat_two}.")
+        return
+    
+    error = character.highlight(possible_stats.index(stat_one)+1, possible_stats.index(stat_two)+1)
+
+    if error is None:
+        await ctx.reply(f'Stats {stat_one} and {stat_two} are now highlighted.')
+    else:
+        await ctx.reply(f"{error}")
+    
+
+@highlight.error
+async def highlight_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f'Please specify both stats to highlight as the following example: `{PREFIX}highlight Cool Weird`')
 
 @bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}addexp <amount>")
 async def addexp(ctx: commands.Context, amount):

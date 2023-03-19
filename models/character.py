@@ -143,7 +143,7 @@ class Character:
         except sqlite3.Error as e:
             print(e)
             self.db.conn.rollback()
-            return "Sorry, something went wrong. Maybe you typed some character's name wrong."
+            return "Sorry, something went wrong."
         self.db.cursor.execute(update_imp, (len(number_list), self.user, self.server))
 
         self.db.conn.commit()
@@ -174,6 +174,23 @@ class Character:
 
     def get_inventory(self) -> list[tuple]:
         return self.db.select("ITEMS, CHARACTERS", columns=["ITM_NAME", "ITM_DESCRIPTION", "ITM_QUANTITY", "ITM_EQUIPED"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND CHR_ID = FK_CHR_ID;")
+
+    def highlight(self, stat_one: int, stat_two: int):
+
+        id = self.get_character_id()
+        update_query = f"UPDATE STATS SET STT_HIGHLIGHT = ? WHERE FK_CHR_ID = ? AND STT_STAT = ?;"
+        try:
+            for i in range(1, 6):
+                value = 1 if i == stat_one or i == stat_two else 0
+                self.db.cursor.execute(update_query, (value, id, i))
+        except sqlite3.Error as e:
+            print(e)
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+        
+        self.db.conn.commit()
+        self.db.close()
+        return None
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
