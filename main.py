@@ -1,6 +1,7 @@
 import discord as dc
 from tabulate import tabulate
 import asyncio
+import re
 from discord.ext import commands
 from models.page import Page
 from models.stats import StatsPage
@@ -259,12 +260,36 @@ async def highlight(ctx: commands.Context, stat_one: lowercase_converter, stat_t
         await ctx.reply(f'Stats {stat_one} and {stat_two} are now highlighted.')
     else:
         await ctx.reply(f"{error}")
-    
 
 @highlight.error
 async def highlight_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f'Please specify both stats to highlight as the following example: `{PREFIX}highlight Cool Weird`')
+
+@bot.command(usage=f"{PREFIX}image <imgur_link>")
+async def image(ctx: commands.Context, link: str):
+    """Changes your character image to a new one provided by
+    the user. The link should be a imgur link like the following:
+    <https://i.imgur.com/JOf48jt.jpeg>"""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    if is_imgur_url(link):
+        character.set_image(link)
+        await ctx.reply("Image changed successfully.")
+        return
+    else:
+        await ctx.reply(f"""It seems your URL is wrong. Be sure to get the URL to the _image_ not to the _gallery_.\nIt should look like this: <https://i.imgur.com/JOf48jt.jpeg>""")
+        return
+
+@image.error
+async def image_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f'Please provide a imgur link. Example: `{PREFIX}image https://i.imgur.com/JOf48jt.jpeg`')
 
 @bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}addexp <amount>")
 async def addexp(ctx: commands.Context, amount):
@@ -605,6 +630,23 @@ async def fullhealc(ctx: commands.Context):
         else:
             await ctx.reply(f'You\'re now fully healed.')
 
+@bot.command(usage = f'{PREFIX}stabilize')
+async def stabilize(ctx: commands.Context):
+    """Adds or remove the _stabilized_ status from your character."""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    status = character.stabilize()
+
+    if status == 0:
+        await ctx.reply('You lose the "Stabilized" status.')
+    else:
+        await ctx.reply('You\'re now "Stabilized".')
+
 @bot.command(usage = f"{PREFIX}hxinfo [name]")
 async def hxinfo(ctx: commands.Context, name: str = None):
     """Lists all HX info from your character. If a character's name
@@ -916,5 +958,10 @@ def iterate_moves(moves: list[tuple], playbooks: list[tuple], pages: list, speci
         else:
             pages.append(MovesPage(batch_moves))
     return pages
+
+def is_imgur_url(url):
+    pattern = r'^https?://i\.imgur\.com/(\w+)(\.\w+)?$'
+    match = re.match(pattern, url)
+    return match is not None
 
 bot.run( TOKEN )

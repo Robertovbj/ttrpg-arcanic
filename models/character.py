@@ -192,6 +192,15 @@ class Character:
         self.db.close()
         return None
 
+    def stabilize(self) -> int:
+        stabilized = self.db.select('CHARACTERS', columns=["CHR_ID", "CHR_STABILIZED"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}")[0]
+        stabilized_val = 0 if stabilized[1] == 1 else 1
+        self.db.update("CHARACTERS", "CHR_ID", stabilized[0], CHR_STABILIZED = stabilized_val)
+        return stabilized_val
+
+    def set_image(self, url: str) -> None:
+        self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_IMAGE = url)
+
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
         super().__init__()
