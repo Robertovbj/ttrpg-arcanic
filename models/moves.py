@@ -10,7 +10,8 @@ class MovesPage(Page):
         self.fields = []
         if self.special is not None:
             self.fields.append(Field(f"Special Moves", f"{self.special}"))
-        self.fields.append(Field(f"Moves", f"""{self.moves}"""))
+        if not self.moves == "":
+            self.fields.append(Field(f"Moves", f"""{self.moves}"""))
 
 class Moves:
     def __init__(self):

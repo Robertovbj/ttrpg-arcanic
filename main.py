@@ -877,9 +877,17 @@ def iterate_moves(moves: list[tuple], playbooks: list[tuple], pages: list, speci
     of move it is before the list of moves of the same type,
     creating a new page for each 20 moves. Return the list of MovesPage
     created."""
+    if len(moves) == 0:
+        pages.append(MovesPage('', special))
+        return pages
+    
     for i in range(0, len(moves), 20):
         batch_moves = "\n".join(str(moves[j][1]) if moves[j-1][2] == moves[j][2] else f"\n**{playbooks[moves[j][2]][1]}**\n{moves[j][1]}" for j in range(i, len(moves[i:i+20])+i))
-        pages.append(MovesPage(batch_moves, special))
+        if i == 0:
+            print(f"{batch_moves} \n\n {special}")
+            pages.append(MovesPage(batch_moves, special))
+        else:
+            pages.append(MovesPage(batch_moves))
     return pages
 
 bot.run( TOKEN )
