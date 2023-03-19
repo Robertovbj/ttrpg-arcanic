@@ -198,6 +198,10 @@ class Character:
         self.db.update("CHARACTERS", "CHR_ID", stabilized[0], CHR_STABILIZED = stabilized_val)
         return stabilized_val
 
+    def reset_image(self) -> None:
+        default = self.db.select("CHARACTERS, PLAYBOOK", columns=["PLB_IMAGE"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND FK_PLB_ID = PLB_ID")[0][0]
+        self.set_image(default)
+
     def set_image(self, url: str) -> None:
         self.db.update("CHARACTERS", "CHR_ID", self.get_character_id(), CHR_IMAGE = url)
 

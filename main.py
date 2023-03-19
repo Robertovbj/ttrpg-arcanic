@@ -291,6 +291,26 @@ async def image_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f'Please provide a imgur link. Example: `{PREFIX}image https://i.imgur.com/JOf48jt.jpeg`')
 
+@bot.command(usage=f"{PREFIX}resetimage")
+async def resetimage(ctx: commands.Context):
+    """Resets your character's image. Will ask for confirmation."""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    confirmation_bot = await ctx.reply(content=f"This action requires confirmation since it will wipe your atual image **for good*. Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        character.reset_image()
+        await ctx.reply("Image reseted to default.")
+
 @bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}addexp <amount>")
 async def addexp(ctx: commands.Context, amount):
     """Add specified amount of exp to your character.
