@@ -24,8 +24,15 @@ bot = commands.Bot( command_prefix=f'{PREFIX}', intents=intents )
 bot.remove_command("help")
 db = Database()
 
-@bot.command()
+@bot.command(usage=f"{PREFIX}checksheet [name]")
 async def checksheet(ctx: commands.Context, char: str = None):
+    """Check your character's full sheet.
+    If a name is passed as argument, will show
+    the named character's sheet instead.
+    
+    Examples:
+    !checksheet - Shows your character's full sheet
+    !checksheet "Will Smith" - Shows Will Smith's full sheet"""
     
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
