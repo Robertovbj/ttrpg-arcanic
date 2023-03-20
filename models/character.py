@@ -121,8 +121,12 @@ class Character:
         return None
 
     def check_if_exists_name(self, name: str) -> int:
-        """Returns 0 if theresn't a character with the specified name on the server. Returns 1 otherwise."""
-        return self.db.select("CHARACTERS", columns=["COUNT(*)"], where=f"CHR_SERVER_ID = {self.server} AND CHR_NAME = '{name}'")[0][0]
+        """Returns 0 if theresn't a character with the specified name on the server. Returns id otherwise."""
+        id = self.db.select("CHARACTERS", columns=["CHR_ID"], where=f"CHR_SERVER_ID = {self.server} AND CHR_NAME = '{name}'")
+        if len(id) == 0:
+            return 0
+        else:
+            return id[0][0]
 
     def change_user_by_name(self, name: str) -> str:
         """Changes self.user to named character's user snowflake"""
@@ -274,7 +278,7 @@ class Character:
         return self.db.select("CHARACTERS", columns=[column], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}")[0][0]
 
     def check_for_item(self, name: str) -> tuple:
-        query = self.db.conn.execute(f"SELECT ITM_NAME, ITM_QUANTITY, ITM_ID FROM ITEMS, CHARACTERS WHERE ITM_NAME = ? AND FK_CHR_ID = CHR_ID AND CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}", (name,))
+        query = self.db.conn.execute(f"SELECT ITM_NAME, ITM_QUANTITY, ITM_ID, ITM_DESCRIPTION FROM ITEMS, CHARACTERS WHERE ITM_NAME = ? AND FK_CHR_ID = CHR_ID AND CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}", (name,))
         item = query.fetchall()
         if len(item) == 0:
             return 0
@@ -317,6 +321,27 @@ class Character:
         self.db.conn.commit()
         self.db.close()
         return None
+    
+    def give_item(self, id_to: int, values: tuple) -> str:
+        self.db.conn.execute('BEGIN')
+        update_query = "INSERT INTO ITEMS (ITM_NAME, ITM_DESCRIPTION, ITM_QUANTITY, FK_CHR_ID) VALUES (?, ?, ?, ?) ON CONFLICT (ITM_NAME, FK_CHR_ID) DO UPDATE SET ITM_QUANTITY = EXCLUDED.ITM_QUANTITY + ITM_QUANTITY"
+
+        try:
+            for row in values:
+                self.db.cursor.execute(update_query, (row[0], row[3], row[1], id_to))
+                if row[2] == 0:
+                    self.db.delete("ITEMS", "ITM_ID", row[4])
+                else:
+                    self.db.update("ITEMS", "ITM_ID", row[4], ITM_QUANTITY = row[2])
+        except sqlite3.Error as e:
+            print(e)
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+        
+        self.db.conn.commit()
+        self.db.close()
+        return None
+
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):

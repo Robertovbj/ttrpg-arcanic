@@ -1223,7 +1223,7 @@ async def itemdescription(ctx: commands.Context, *args: str):
         await ctx.reply(message)
 
 @bot.command(usage = f"{PREFIX}inventory")
-async def inventory(ctx: commands.Context, name: str = None):
+async def inventory(ctx: commands.Context):
     """Lists your character's the inventory."""
     
     character = Character(str(ctx.author.id), str(ctx.guild.id))
@@ -1243,6 +1243,68 @@ async def inventory(ctx: commands.Context, name: str = None):
 
     embed = dc.Embed.from_dict(page_manager.get_embed_dict())
     await ctx.reply(embed=embed)
+
+@bot.command(usage =f"give <name> <amount> <item> [<amount> <item>]...")
+async def give(ctx: commands.Context, name: str,  *args: str):
+    """Gives the named character specified amount of 
+    some item. Can specify multiple items at once by 
+    separating the "amount, item name" pair with "|".
+    
+    Example:
+    `!give "Will Smith" 1 "Potion"` - Gives Will Smith
+        1 Potion.
+    `!give "Will Smith" 1 "Potion" | 2 "Potion 2"` - Gives
+        Will Smith 1 Potion and 2 "Potion 2"."""
+    
+    if not args or len(args) < 2:
+        await ctx.reply("Please provide at least one pair of amount and item name to edit.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    id_char = character.check_if_exists_name(name)
+    if not id_char:
+        await ctx.reply(f"No character named {name} found on this server.")
+        return
+    
+    args_pairs = []
+    items = ""
+
+    try:
+        for i in range(0, len(args), 3):
+            value = int(args[i])
+            name = args[i+1].capitalize()
+            existing_item = character.check_for_item(name)
+            if not existing_item:
+                await ctx.reply(f"There's no item named {name} in your inventory.")
+                return
+            new_value = existing_item[1] - value
+            if new_value < 0:
+                await ctx.reply(f"You can't give {value}x {name} since you only have {existing_item[1]} on your inventory.")
+                return
+            args_pairs.append([name, value, new_value, existing_item[3], existing_item[2]])
+            items += f"{value}x {name}\n"
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}removeitem 1 "Potion 1" | 1 "Handgun"```')
+        return
+    
+    confirmation_bot = await ctx.reply(content=f"You're about to give {name}:\n{items}Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        message = character.give_item(id_char, args_pairs)
+
+        if message is None:
+            await ctx.reply("Transaction completed.")
+        else:
+            await ctx.reply(f"{message} Please check both inventories if any item is missing and try again.")
 
 @bot.command()
 async def snow(ctx):
@@ -1270,6 +1332,7 @@ async def help(ctx: commands.Context, cmd = None):
         else:
             em = dc.Embed(title=f"**{cmd_obj.name}**", description=f"{cmd_obj.help}")
             em.add_field(name="**Syntax**", value=f"`{cmd_obj.usage}`")
+            em.set_footer(text="<> means it's required, [] means it's optional")
             await ctx.send(embed=em)
 
 # Helper functions
