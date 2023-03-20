@@ -258,6 +258,21 @@ class Character:
         self.db.close()
         return None
 
+    def add_debility(self, column: str) -> str:
+        update_query = f"UPDATE CHARACTERS SET {column} = 1 WHERE CHR_ID = ?"
+        try:
+            self.db.conn.execute(update_query, (self.get_character_id(),))
+        except:
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+        
+        self.db.conn.commit()
+        self.db.close()
+        return None
+
+    def check_for_debility(self, column: str) -> int:
+        return self.db.select("CHARACTERS", columns=[column], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}")[0][0]
+
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
         super().__init__()

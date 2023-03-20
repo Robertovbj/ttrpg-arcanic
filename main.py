@@ -586,6 +586,50 @@ async def take_harm_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of harm to take. Example: `{PREFIX}takeharm 2`")
 
+@bot.command(usage = f"{PREFIX}takedebility <name>")
+async def takedebility(ctx: commands.Context, name: lowercase_converter):
+    """Marks a debility for your character. Remember,
+    debilities are **PERMANENT**. Valid options are: 
+    `shattered` `crippled` `disfigured` `broken`"""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    possible_debilities = ['shattered', 'crippled', 'disfigured', 'broken']
+
+    if name not in possible_debilities:
+        await ctx.reply(f"There's no debility named {name}.")
+        return
+    
+    possible_columns = ['CHR_SHATTERED', 'CHR_CRIPPLED', 'CHR_DISFIGURED', 'CHR_BROKEN']
+    column_name = possible_columns[possible_debilities.index(name)]
+
+    if character.check_for_debility(column_name):
+        await ctx.reply(f"You already are {name}.")
+        return
+
+    confirmation_bot = await ctx.reply(content=f"Taking a debility is a _**PERMANENT**_ decision. Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=15.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        message = character.add_debility(column_name)
+        
+        if message is None:
+            await ctx.reply('Debility taken successfully.')
+        else:
+            await ctx.reply(message)
+
+@takedebility.error
+async def take_debility_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the debility to take. Example: `{PREFIX}takedebility Crippled`")
+
 @bot.command(usage = f"{PREFIX}healharm <amount>")
 async def healharm(ctx: commands.Context, amount):
     """Heal specified amount of harm on your character."""
