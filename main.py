@@ -850,6 +850,58 @@ async def learnmoves(ctx: commands.Context, *args: str):
     else:
         await ctx.reply(message)
 
+@bot.command(usage=f"{PREFIX}removemoves <move> [| <move>]...")
+async def removemoves(ctx: commands.Context, *args: str):
+    """Removes named moves from your sheet. To specify the move to remove,
+    use `/moves`, copy it's name and paste it between double quotes.
+    Can specify multiple moves at once by separating their names
+    with "|".
+    
+    Examples:
+    `!removemoves "Sixth sense"` - Removes the move Sixth sense from your sheet.
+    `!removemoves "Sixth sense" | "Reality's fraying edge"` - Removes the moves
+    Sixth sense and Reality's fraying edge from your sheet."""
+
+    if not args:
+        await ctx.reply("Please provide at least one move to remove.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    # Makes a string like 'Move 1|Move 2|Move 3' and then splits it on '|'s
+    # returning a list
+    arg_list = "".join(args).split("|")
+    id_list = []
+
+    for arg in arg_list:
+        id = Moves().get_id_by_name(arg)
+        if not id:
+            await ctx.reply(f"Sorry, it seems the move {arg} doesn't exists.")
+            return
+        chm_id = character.has_the_moves(id)
+        if not chm_id:
+            await ctx.reply(f"It seems you don't have the move {arg}.")
+            return
+        id_list.append(chm_id)
+    
+    confirmation_bot = await ctx.reply(content=f"This action should only be used in case of error while getting a move. Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        message = character.delete_moves(id_list)
+
+        if message is None:
+            await ctx.reply("Moves removed successfully.")
+        else:
+            await ctx.reply(message)
+
 @bot.command(usage = f"{PREFIX}myimprovements")
 async def myimprovements(ctx: commands.Context):
     """Lists your character's improvements."""

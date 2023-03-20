@@ -223,9 +223,10 @@ class Character:
         return None
 
     def has_the_moves(self, id: int) -> int:
-        return self.db.select("CHARACTER_MOVES, CHARACTERS", columns=["COUNT(*)"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND FK_CHR_ID = CHR_ID AND FK_MVS_ID = {id}")[0][0]
+        chm_id = self.db.select("CHARACTER_MOVES, CHARACTERS", columns=["CHM_ID"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND FK_CHR_ID = CHR_ID AND FK_MVS_ID = {id}")
+        return 0 if len(chm_id) == 0 else chm_id[0][0]
 
-    def add_moves(self, moves: list):
+    def add_moves(self, moves: list) -> str:
         id = self.get_character_id()
         id_list = [id] * len(moves)  # Creates a list with the char id of interpolation
         zipped = list(zip(id_list, moves))  # Creates a list of tuples that intercalates with moves id like [(1, 10), (1, 12)]
@@ -235,6 +236,20 @@ class Character:
 
         try:
             self.db.conn.execute(insert_query, values)
+        except:
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+        
+        self.db.conn.commit()
+        self.db.close()
+        return None
+
+    def delete_moves(self, moves: list) -> str:
+        id_list = ', '.join(str(id) for id in moves)
+        query = f"DELETE FROM CHARACTER_MOVES WHERE CHM_ID IN ({id_list})"
+
+        try:
+            self.db.conn.execute(query)
         except:
             self.db.conn.rollback()
             return "Sorry, something went wrong."
