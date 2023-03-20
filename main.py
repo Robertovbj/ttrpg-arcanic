@@ -460,7 +460,7 @@ async def use_barter_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of exp to spend. Example: `{PREFIX}usebarter 2`")
 
-@bot.command(usage =f"give <name> <amount>")
+@bot.command(usage =f"givebarter <name> <amount>")
 async def givebarter(ctx: commands.Context, name: str,  amount):
     """Gives the named character specified amount of 
     barter."""
