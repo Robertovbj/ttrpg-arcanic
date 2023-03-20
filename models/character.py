@@ -298,6 +298,13 @@ class Character:
         self.db.close()
         return None
 
+    def remove_item(self, values: tuple) -> str:
+        for row in values:
+            if row[0] == 0:
+                self.db.delete("ITEMS", "ITM_ID", row[2])
+            else:
+                self.db.update("ITEMS", "ITM_ID", row[2], ITM_QUANTITY = row[0])
+
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
         super().__init__()

@@ -1082,7 +1082,7 @@ async def removeimprovement(ctx: commands.Context, *args: str):
         else:
             await ctx.reply(message)
 
-@bot.command(usage = f"{PREFIX}additem <amount> <name> <description> [| <amount> <name> <description]...")
+@bot.command(usage = f"{PREFIX}additem <amount> <name> <description> [| <amount> <name> <description>]...")
 async def additem(ctx: commands.Context, *args: str):
     """Adds items to your inventory. Can specify multiple
     items at once by separating the "amount, name, description"
@@ -1092,10 +1092,10 @@ async def additem(ctx: commands.Context, *args: str):
     
     Example:
     `!additem 1 "Potion 1" "Heals 1 harm"` - Adds 1 "Potion 1" that
-        "Heals 1 harm".
+        "Heals 1 harm" to your inventory.
     `!additem 2 "Potion 1" "Heals 1 harm" | 1 "Potion 2" "Heals 2 harm"` 
         - Adds 2 "Potion 1" that "Heals 1 harm" and 1 "Potion 2" that 
-        "Heals 2 harm"."""
+        "Heals 2 harm" to your inventory."""
 
     if not args or len(args) < 3:
         await ctx.reply("Please provide at least one group of amount, item name and description to add.")
@@ -1129,6 +1129,51 @@ async def additem(ctx: commands.Context, *args: str):
         await ctx.reply(f"Items added successfully.")
     else:
         await ctx.reply(message)
+
+@bot.command(usage = f"{PREFIX}removeitem <amount> <name> [| <amount> <name>]...")
+async def removeitem(ctx: commands.Context, *args: str):
+    """Removes items from your inventory. Can specify multiple
+    items at once by separating the "amount, name"
+    group with "|"..
+    
+    Example:
+    `!removeitem 1 "Potion 1"` - Removes 1 "Potion 1" from your 
+        inventory.
+    `!removeitem 2 "Potion 1" | 1 "Potion 2"` - Removes 2 
+        "Potion 1" and 1 "Potion 2" from your inventory."""
+
+    if not args or len(args) < 2:
+        await ctx.reply("Please provide at least one pair of amount and item name to remove.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    args_pairs = []
+
+    try:
+        for i in range(0, len(args), 3):
+            value = int(args[i])
+            name = args[i+1].capitalize()
+            existing_item = character.check_for_item(name)
+            if not existing_item:
+                await ctx.reply(f"There's no item named {name} in your inventory.")
+                return
+            new_value = existing_item[1] - value
+            if new_value < 0:
+                await ctx.reply(f"You can't remove {value}x {name} since you only have {existing_item[1]} on your inventory.")
+                return
+            args_pairs.append([new_value, name, existing_item[2]])
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}removeitem 1 "Potion 1" | 1 "Handgun"```')
+        return
+
+    character.remove_item(args_pairs)
+
+    await ctx.reply(f"Items removed successfully.")
 
 @bot.command()
 async def snow(ctx):
