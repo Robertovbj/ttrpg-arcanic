@@ -298,12 +298,25 @@ class Character:
         self.db.close()
         return None
 
-    def remove_item(self, values: tuple) -> str:
+    def remove_item(self, values: tuple) -> None:
         for row in values:
             if row[0] == 0:
                 self.db.delete("ITEMS", "ITM_ID", row[2])
             else:
                 self.db.update("ITEMS", "ITM_ID", row[2], ITM_QUANTITY = row[0])
+
+    def edit_description(self, values: tuple) -> str:
+        update_query = "UPDATE ITEMS SET ITM_DESCRIPTION = ? WHERE ITM_ID = ?"
+        try:
+            for row in values:
+                self.db.conn.execute(update_query, (row[0], row[1],))
+        except:
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+        
+        self.db.conn.commit()
+        self.db.close()
+        return None
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):

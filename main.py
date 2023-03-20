@@ -1114,10 +1114,6 @@ async def additem(ctx: commands.Context, *args: str):
             value = int(args[i])
             name = args[i+1].capitalize()
             description = args[i+2]
-            # if character.check_for_item(name):
-            #     print('a')
-            # else:
-            #     print('b')
             args_pairs.append([value, name, description])
     except:
         await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}additem 1 "Potion 1" "Heals 1 harm" | 1 "Handgun" "Deals 2 harm"```')
@@ -1134,7 +1130,7 @@ async def additem(ctx: commands.Context, *args: str):
 async def removeitem(ctx: commands.Context, *args: str):
     """Removes items from your inventory. Can specify multiple
     items at once by separating the "amount, name"
-    group with "|"..
+    group with "|".
     
     Example:
     `!removeitem 1 "Potion 1"` - Removes 1 "Potion 1" from your 
@@ -1174,6 +1170,57 @@ async def removeitem(ctx: commands.Context, *args: str):
     character.remove_item(args_pairs)
 
     await ctx.reply(f"Items removed successfully.")
+
+@bot.command(usage = f"{PREFIX}itemdescription <name> <description> [| <name> <description>]...")
+async def itemdescription(ctx: commands.Context, *args: str):
+    """Edits the description of items on your inventory. 
+    Can specify multiple items at once by separating the 
+    "name, description" pair with "|".
+    
+    Example:
+    `!itemdescription "Potion 1" "Heals 2 harm"` - Changes
+        the description of "Potion 1" to "Heals 2 harm".
+    `!itemdescription "Potion 1" "Heals 2 harm" | "Potion 2" "Heals 3 harms"`
+        - Changes the description of "Potion 1" to "Heals 2 harm" and
+        of "Potion 2" to "Heals 3 harms"."""
+
+    if not args or len(args) < 2:
+        await ctx.reply("Please provide at least one pair of item name and description to edit.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    args_pairs = []
+
+    try:
+        for i in range(0, len(args), 3):
+            name = args[i].capitalize()
+            description = args[i+1]
+            try:
+                if args[i+2] != "|":
+                    await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}itemdescription "Potion 1" "Heals 2 harm" | "Potion 2" "Heals 3 harms"```')
+                    return
+            except:
+                pass
+            existing_item = character.check_for_item(name)
+            if not existing_item:
+                await ctx.reply(f"There's no item named {name} in your inventory.")
+                return
+            args_pairs.append([description, existing_item[2]])
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}itemdescription "Potion 1" "Heals 2 harm" | "Potion 2" "Heals 3 harms"```')
+        return
+
+    message = character.edit_description(args_pairs)
+
+    if message is None:
+        await ctx.reply(f"Items edited successfully.")
+    else:
+        await ctx.reply(message)
 
 @bot.command()
 async def snow(ctx):
