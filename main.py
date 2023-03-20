@@ -1222,6 +1222,28 @@ async def itemdescription(ctx: commands.Context, *args: str):
     else:
         await ctx.reply(message)
 
+@bot.command(usage = f"{PREFIX}inventory")
+async def inventory(ctx: commands.Context, name: str = None):
+    """Lists your character's the inventory."""
+    
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+    char_info = character.get_basic_profile()
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    pages = []
+
+    hx = character.get_inventory()
+    barter = character.get_barter()
+    pages = [InventoryPage(hx, barter)]
+
+    page_manager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+
+    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+    await ctx.reply(embed=embed)
+
 @bot.command()
 async def snow(ctx):
     """Test command. Should be removed for release"""
