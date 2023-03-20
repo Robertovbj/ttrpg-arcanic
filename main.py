@@ -806,8 +806,21 @@ async def hxadjust(ctx: commands.Context, *args: str):
     else:
         await ctx.reply(message)
 
-@bot.command()
+@bot.command(usage=f"{PREFIX}learnmoves <move> [| <move>]...")
 async def learnmoves(ctx: commands.Context, *args: str):
+    """Learns named moves. To specify the move to learn,
+    use `/moves`, copy it's name and paste it between double quotes.
+    Can specify multiple moves at once by separating their names
+    with "|".
+    
+    Examples:
+    `!learnmoves "Sixth sense"` - Adds the move Sixth sense to your sheet.
+    `!learnmoves "Sixth sense" | "Reality's fraying edge"` - Adds the moves
+    Sixth sense and Reality's fraying edge to your sheet."""
+
+    if not args:
+        await ctx.reply("Please provide at least one move to learn.")
+        return
 
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -818,8 +831,24 @@ async def learnmoves(ctx: commands.Context, *args: str):
     # Makes a string like 'Move 1|Move 2|Move 3' and then splits it on '|'s
     # returning a list
     arg_list = "".join(args).split("|")
-    # for arg in arg_list:
-    #     await ctx.send(f"Argument is: {arg}")
+    id_list = []
+
+    for arg in arg_list:
+        id = Moves().get_id_by_name(arg)
+        if not id:
+            await ctx.reply(f"Sorry, it seems the move {arg} doesn't exists.")
+            return
+        if character.has_the_moves(id):
+            await ctx.reply(f"It seems you already have the move {arg}.")
+            return
+        id_list.append(id)
+    
+    message = character.add_moves(id_list)
+
+    if message is None:
+        await ctx.reply("Moves learned successfully.")
+    else:
+        await ctx.reply(message)
 
 @bot.command(usage = f"{PREFIX}myimprovements")
 async def myimprovements(ctx: commands.Context):

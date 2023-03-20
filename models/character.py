@@ -4,6 +4,7 @@ from emojis import INVISIBLE
 from configs.database import Database
 import sqlite3
 import math
+import itertools
 
 class Character:
     def __init__(self, user: str, server: str):
@@ -209,7 +210,7 @@ class Character:
 
         id = self.get_character_id()
         update_query = f"UPDATE STATS SET STT_VALUE = ? WHERE FK_CHR_ID = ? AND STT_STAT = ?;"
-        
+
         try:
             for i in range(len(stats)):
                 self.db.conn.execute(update_query, (value[i], id, stats[i]))
@@ -217,6 +218,27 @@ class Character:
             self.db.conn.rollback()
             return "Sorry, something went wrong."
     
+        self.db.conn.commit()
+        self.db.close()
+        return None
+
+    def has_the_moves(self, id: int) -> int:
+        return self.db.select("CHARACTER_MOVES, CHARACTERS", columns=["COUNT(*)"], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server} AND FK_CHR_ID = CHR_ID AND FK_MVS_ID = {id}")[0][0]
+
+    def add_moves(self, moves: list):
+        id = self.get_character_id()
+        id_list = [id] * len(moves)  # Creates a list with the char id of interpolation
+        zipped = list(zip(id_list, moves))  # Creates a list of tuples that intercalates with moves id like [(1, 10), (1, 12)]
+        placeholders = ", ".join(["(?, ?)" for _ in range(len(zipped))])  # Creates as many placeholders needed
+        values = tuple(itertools.chain(*zipped))  # Unpacks arguments so it can be used on the execute
+        insert_query = f"INSERT INTO CHARACTER_MOVES(FK_CHR_ID, FK_MVS_ID) VALUES {placeholders}"
+
+        try:
+            self.db.conn.execute(insert_query, values)
+        except:
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+        
         self.db.conn.commit()
         self.db.close()
         return None
