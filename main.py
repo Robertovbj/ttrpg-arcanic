@@ -1082,6 +1082,53 @@ async def removeimprovement(ctx: commands.Context, *args: str):
         else:
             await ctx.reply(message)
 
+@bot.command(usage = f"{PREFIX}additem <amount> <name> <description> [| <amount> <name> <description]...")
+async def additem(ctx: commands.Context, *args: str):
+    """Adds items to your inventory. Can specify multiple
+    items at once by separating the "amount, name, description"
+    group with "|". If the item already exists on your inventory,
+    it will add it's amount and **keep** the old description (meaning
+    it's good to keep item's names unique for each description).
+    
+    Example:
+    `!additem 1 "Potion 1" "Heals 1 harm"` - Adds 1 "Potion 1" that
+        "Heals 1 harm".
+    `!additem 2 "Potion 1" "Heals 1 harm" | 1 "Potion 2" "Heals 2 harm"` 
+        - Adds 2 "Potion 1" that "Heals 1 harm" and 1 "Potion 2" that 
+        "Heals 2 harm"."""
+
+    if not args or len(args) < 3:
+        await ctx.reply("Please provide at least one group of amount, item name and description to add.")
+        return
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+
+    args_pairs = []
+
+    try:
+        for i in range(0, len(args), 4):
+            value = int(args[i])
+            name = args[i+1].capitalize()
+            description = args[i+2]
+            # if character.check_for_item(name):
+            #     print('a')
+            # else:
+            #     print('b')
+            args_pairs.append([value, name, description])
+    except:
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}additem 1 "Potion 1" "Heals 1 harm" | 1 "Handgun" "Deals 2 harm"```')
+        return
+
+    message = character.insert_item(args_pairs)
+
+    if message is None:
+        await ctx.reply(f"Items added successfully.")
+    else:
+        await ctx.reply(message)
 
 @bot.command()
 async def snow(ctx):

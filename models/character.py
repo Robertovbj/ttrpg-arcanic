@@ -273,6 +273,31 @@ class Character:
     def check_for_debility(self, column: str) -> int:
         return self.db.select("CHARACTERS", columns=[column], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}")[0][0]
 
+    def check_for_item(self, name: str) -> tuple:
+        query = self.db.conn.execute(f"SELECT ITM_NAME, ITM_QUANTITY, ITM_ID FROM ITEMS, CHARACTERS WHERE ITM_NAME = ? AND FK_CHR_ID = CHR_ID AND CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}", (name,))
+        item = query.fetchall()
+        if len(item) == 0:
+            return 0
+        else:
+            return item[0]
+
+    def insert_item(self, values: tuple) -> str:
+        id = self.get_character_id()
+
+        self.db.conn.execute('BEGIN')
+        update_query = "INSERT INTO ITEMS (ITM_NAME, ITM_DESCRIPTION, ITM_QUANTITY, FK_CHR_ID) VALUES (?, ?, ?, ?) ON CONFLICT (ITM_NAME, FK_CHR_ID) DO UPDATE SET ITM_QUANTITY = EXCLUDED.ITM_QUANTITY + ITM_QUANTITY"
+
+        try:
+            for row in values:
+                self.db.cursor.execute(update_query, (row[1], row[2], row[0], id))
+        except:
+            self.db.conn.rollback()
+            return "Sorry, something went wrong."
+        
+        self.db.conn.commit()
+        self.db.close()
+        return None
+
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
         super().__init__()
