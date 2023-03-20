@@ -460,6 +460,58 @@ async def use_barter_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of exp to spend. Example: `{PREFIX}usebarter 2`")
 
+@bot.command(usage =f"give <name> <amount>")
+async def givebarter(ctx: commands.Context, name: str,  amount):
+    """Gives the named character specified amount of 
+    barter."""
+    
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    id_char = character.check_if_exists_name(name)
+    if not id_char:
+        await ctx.reply(f"No character named {name} found on this server.")
+        return
+    
+    try:
+        # Deals with the possibility of wrong user input
+        amount = int(amount)
+    except:
+        await ctx.reply(f'To give barter, please follow the example: `{PREFIX}givebarter "Will Smith" 2`')
+        return
+    
+    if amount < 1:
+        await ctx.reply(f"Barter amount needs to be a positive integer.")
+        return
+    
+    confirmation_bot = await ctx.reply(content=f"You're about to give {name} {amount}-barter. Type 'Confirm' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        try:
+            barter = character.add_barter(-amount)
+        except:
+            await ctx.reply(f'Sorry, something went wrong.')
+            return
+        else:
+            if barter < 0:
+                await ctx.reply(f"You can't have negative barter.")
+            else:
+                try:
+                    character.change_user_by_name(name)
+                    barter = character.add_barter(amount)
+                except:
+                    await ctx.reply(f'Sorry, something went wrong. Please check sender\'s barter.')
+                    return
+                else:
+                    await ctx.reply(f'Transaction complete. You gave {name} {amount}-barter.')
+
 @bot.command(usage = f"{PREFIX}moves")
 async def moves(ctx: commands.Context):
     """Lists all moves available."""
@@ -1289,7 +1341,7 @@ async def give(ctx: commands.Context, name: str,  *args: str):
             args_pairs.append([name, value, new_value, existing_item[3], existing_item[2]])
             items += f"{value}x {name}\n"
     except:
-        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}removeitem 1 "Potion 1" | 1 "Handgun"```')
+        await ctx.reply(content=f'Sorry, something went wrong. Please check your command syntax, it should look like this: ```{PREFIX}!give "Will Smith" 1 "Potion" | 2 "Potion 2"```')
         return
     
     confirmation_bot = await ctx.reply(content=f"You're about to give {name}:\n{items}Type 'Confirm' to proceed.")
