@@ -969,9 +969,10 @@ async def myimprovements(ctx: commands.Context):
 async def improve(ctx: commands.Context, *args: str):
     """Get the specified improvement. Can specify
     multiple improvements at once by separating the "value"
-    with "|". The number must be between 1 and 16 (both included).
-    It will **_NOT_** add the stats to your sheet if the improvement
-    says you should, it must be done manually.
+    with "|". The number must be between 1 and 16 (both included), 
+    and can't be 12, 13 and 14 (check `finaladvance` and `newtype`
+    commands). It will **_NOT_** add the stats to your sheet if the
+    improvement says you should, it must be done manually.
     
     Example:
     `!improve 1` - Get the first improvement.
@@ -994,8 +995,8 @@ async def improve(ctx: commands.Context, *args: str):
     try:
         for i in range(0, len(args), 2):
             value = int(args[i])
-            if value < 1 or value > 16:
-                await ctx.reply(f"The improvement number must between 1 and 16 (both included).")
+            if value < 1 or value > 16 or value in [12, 13, 14]:
+                await ctx.reply(f"The improvement number must between 1 and 16 (both included), and can't be 12, 13 and 14 (check `finaladvance` and `newtype` commands).")
                 return
             if my_improvements[value-1][0] == 1:
                 await ctx.reply(f"You already have the '{my_improvements[value-1][1]}' improvement.")
@@ -1028,9 +1029,10 @@ async def improve(ctx: commands.Context, *args: str):
 async def removeimprovement(ctx: commands.Context, *args: str):
     """Remove the specified improvement. Can specify
     multiple improvements at once by separating the "value"
-    with "|". The number must be between 1 and 16 (both included).
-    It will **_NOT_** remove the stats from your sheet if the improvement
-    was about adding it, it must be done manually.
+    with "|". The number must be between 1 and 16 (both included), 
+    and can't be 12, 13 and 14 (check `finaladvance` and `newtype` 
+    commands). It will **_NOT_** remove the stats from your sheet 
+    if the improvement was about adding it, it must be done manually.
     
     Example:
     `!removeimprovement 1` - Remove the first improvement.
@@ -1057,6 +1059,9 @@ async def removeimprovement(ctx: commands.Context, *args: str):
                 return
             if my_improvements[value-1][0] != 1:
                 await ctx.reply(f"You don't have the '{my_improvements[value-1][1]}' improvement.")
+                return
+            if value in [12, 13, 14]:
+                await ctx.reply(f"You can't remove the '{my_improvements[value-1][1]}' improvement.")
                 return
             args_imp.append(my_improvements[value-1][2])
     except:
