@@ -1513,7 +1513,9 @@ async def retired(ctx: commands.Context):
 
 @bot.command(usage=f"{PREFIX}newtype <playbook>")
 async def newtype(ctx: commands.Context, new_pb: str):
-    """Change your character to a new type. Valid options are:
+    """Change your character to a new type. It's the equivalent 
+    of getting the 'change your character to a new type' improvement. 
+    Valid options are:
     `Angel` `Battlebabe` `Brainer` `Chopper` `Driver` `Gunlugger` 
     `Hardholder` `Hocus` `Operator` `Savyhead` `Skinner` `Child-thing` 
     `Faceless` `News` `Quarantine` `Show` `Waterbearer` `Landfall Marine`"""
