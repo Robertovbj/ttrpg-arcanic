@@ -1061,6 +1061,10 @@ async def improve(ctx: commands.Context, *args: str):
     my_improvements = character.get_improvements()
     _, imp_points = character.get_exp()
 
+    # In case the character changed type
+    if len(my_improvements) == 26:
+        my_improvements = my_improvements[-10:] + my_improvements[10:-10] + my_improvements[:10]
+
     try:
         for i in range(0, len(args), 2):
             value = int(args[i])
@@ -1119,6 +1123,10 @@ async def removeimprovement(ctx: commands.Context, *args: str):
 
     args_imp = []
     my_improvements = character.get_improvements()
+
+    # In case the character changed type
+    if len(my_improvements) == 26:
+        my_improvements = my_improvements[-10:] + my_improvements[10:-10] + my_improvements[:10]
 
     try:
         for i in range(0, len(args), 2):
@@ -1502,6 +1510,49 @@ async def retired(ctx: commands.Context):
             await turn_pages(msg, reaction, user, page_manager)
         except:
             break
+
+@bot.command(usage=f"{PREFIX}newtype <playbook>")
+async def newtype(ctx: commands.Context, new_pb: str):
+    """Change your character to a new type. Valid options are:
+    `Angel` `Battlebabe` `Brainer` `Chopper` `Driver` `Gunlugger` 
+    `Hardholder` `Hocus` `Operator` `Savyhead` `Skinner` `Child-thing` 
+    `Faceless` `News` `Quarantine` `Show` `Waterbearer` `Landfall Marine`"""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    if character.is_new_type():
+        await ctx.reply("You can't change types twice.")
+        return
+
+    playbooks = ["Angel","Battlebabe","Brainer","Chopper","Driver","Gunlugger",
+    "Hardholder","Hocus","Operator","Savyhead","Skinner","Child-thing",
+    "Faceless","News","Quarantine","Show","Waterbearer","Landfall Marine"]
+
+    if new_pb not in playbooks:
+        await ctx.reply(f"No playbook named {new_pb} found. Check `{PREFIX}help newtype` to see the valid options.")
+        return
+    
+    char_name = character.get_character_name()
+    
+    confirmation_bot = await ctx.reply(content=f"_**WARNING:**_ This will change your playbook to {new_pb}, and while you keep your old improvements, you'll **NOT** be able to improve the ones you left behind. Type '{char_name}' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, char_name))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        character.new_type(playbooks.index(new_pb) + 1)
+        await ctx.reply(f"You are now a {new_pb}.")
+
+
+@newtype.error
+async def newtype_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the playbook to change. Example: `{PREFIX}newtype \"Angel\"`")
 
 @bot.command(usage=f"{PREFIX}help [command]")
 async def help(ctx: commands.Context, cmd = None):

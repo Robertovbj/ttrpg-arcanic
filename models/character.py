@@ -355,6 +355,19 @@ class Character:
     
     def get_retired(self):
         return self.db.select("FINAL_ADVANCE", where=f"FNA_SERVER_ID = {self.server}")
+    
+    def new_type(self, playbook):
+        id = self.get_character_id()
+        self.db.update("CHARACTERS", "CHR_ID", id, FK_PLB_ID = playbook)
+        insert_improvements = f"INSERT INTO CHARACTER_IMPROVEMENTS(FK_CHR_ID, FK_IMP_ID) VALUES (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?);"
+        shift = 7+(playbook-1)*10
+        self.db.cursor.execute(insert_improvements, (id, shift, id, shift+1, id, shift+2, id, shift+3, id, shift+4, id, shift+5, id, shift+6, id, shift+7, id, shift+8, id, shift+9))
+        self.db.cursor.execute("UPDATE CHARACTER_IMPROVEMENTS SET CHI_CHECKED = 1 WHERE FK_CHR_ID = ? AND FK_IMP_ID = 4", (id,))
+        self.db.conn.commit()
+
+    def is_new_type(self):
+        id = self.get_character_id()
+        return self.db.select("CHARACTER_IMPROVEMENTS", columns=["CHI_CHECKED"], where=f"FK_CHR_ID = {id} AND FK_IMP_ID = 4")[0][0]
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
