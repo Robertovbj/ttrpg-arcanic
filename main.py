@@ -1443,7 +1443,7 @@ async def finaladvance(ctx: commands.Context):
             try:
                 character.final_advance()
                 character.delete_character()
-                await ctx.send('Character deleted successfully.')
+                await ctx.send('Character retired successfully.')
             except:
                 await ctx.send('Something went wrong.')
 
@@ -1547,7 +1547,6 @@ async def newtype(ctx: commands.Context, new_pb: str):
     else:
         character.new_type(playbooks.index(new_pb) + 1)
         await ctx.reply(f"You are now a {new_pb}.")
-
 
 @newtype.error
 async def newtype_error(ctx: commands.Context, error):
