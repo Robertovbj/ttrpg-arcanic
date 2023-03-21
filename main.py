@@ -364,7 +364,8 @@ async def resetimage(ctx: commands.Context):
 
 @bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}addexp <amount>")
 async def addexp(ctx: commands.Context, amount):
-    """Add specified amount of exp to your character.
+    """Add specified amount of exp to your character. The amount can
+    be negative in case of the need of exp removal.
     Also calculates and shows the amount of improvement points."""
     
     character = Character(str(ctx.author.id), str(ctx.guild.id))
