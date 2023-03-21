@@ -278,7 +278,7 @@ class Character:
         return self.db.select("CHARACTERS", columns=[column], where=f"CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}")[0][0]
 
     def check_for_item(self, name: str) -> tuple:
-        query = self.db.conn.execute(f"SELECT ITM_NAME, ITM_QUANTITY, ITM_ID, ITM_DESCRIPTION FROM ITEMS, CHARACTERS WHERE ITM_NAME = ? AND FK_CHR_ID = CHR_ID AND CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}", (name,))
+        query = self.db.conn.execute(f"SELECT ITM_NAME, ITM_QUANTITY, ITM_ID, ITM_DESCRIPTION, ITM_EQUIPED FROM ITEMS, CHARACTERS WHERE ITM_NAME = ? AND FK_CHR_ID = CHR_ID AND CHR_USER_ID = {self.user} AND CHR_SERVER_ID = {self.server}", (name,))
         item = query.fetchall()
         if len(item) == 0:
             return 0
@@ -341,7 +341,20 @@ class Character:
         self.db.conn.commit()
         self.db.close()
         return None
+    
+    def equip(self, values: tuple):
+        self.db.update("ITEMS", "ITM_ID", values[0], ITM_EQUIPED = values[1])
 
+    def final_advance(self):
+        basic = self.get_basic_profile()
+        stats = [row[1] for row in self.get_stats()]
+        self.db.insert("FINAL_ADVANCE(FNA_SERVER_ID, FNA_CHR_NAME, FNA_PLB_NAME, FNA_COOL, FNA_HARD, FNA_HOT, FNA_SHARP, FNA_WEIRD)", (self.server, basic[1], basic[2], stats[0], stats[1], stats[2], stats[3], stats[4]))
+
+    def get_players(self):
+        return self.db.select("CHARACTERS", columns=["CHR_NAME"], where=f"CHR_SERVER_ID = {self.server}")
+    
+    def get_retired(self):
+        return self.db.select("FINAL_ADVANCE", where=f"FNA_SERVER_ID = {self.server}")
 
 class NewCharacterPage(Page):
     def __init__(self, playbooks, emoji):
@@ -356,4 +369,11 @@ class ChooseSetPage(Page):
         super().__init__()
         self.fields = [
             Field(f"Choose a stats set", f"{sets}")
+        ]
+
+class AllCharacters(Page):
+    def __init__(self, char_names):
+        super().__init__()
+        self.fields = [
+            Field(f"Names", f"{char_names}")
         ]

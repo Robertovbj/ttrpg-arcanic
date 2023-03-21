@@ -13,7 +13,7 @@ from models.inventory import InventoryPage
 from models.page_manager import PageManager
 from models.playbook import Playbook
 from models.stats_sets import StatsSets
-from models.character import NewCharacterPage, ChooseSetPage, Character
+from models.character import NewCharacterPage, ChooseSetPage, Character, AllCharacters
 from configs.database import Database
 from config import TOKEN  # Import the bot token from the config module
 import emojis
@@ -227,11 +227,18 @@ async def deletesheet(ctx: commands.Context):
     except asyncio.TimeoutError:
         await confirmation_bot.edit(content='Confirmation timed out. Character not deleted.')
     else:
+        confirmation_bot = await ctx.reply(f'Last chance. Type \'Confirm\' to continue.')
+
         try:
-            character.delete_character()
-            await ctx.send('Character deleted successfully.')
-        except:
-            await ctx.send('Something went wrong.')
+            confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+        except asyncio.TimeoutError:
+            await confirmation_bot.edit(content='Confirmation timed out. Character not deleted.')
+        else:
+            try:
+                character.delete_character()
+                await ctx.send('Character deleted successfully.')
+            except:
+                await ctx.send('Something went wrong.')
 
 @bot.command(usage=f"{PREFIX}highlight <stat1> <stat2>")
 async def highlight(ctx: commands.Context, stat_one: lowercase_converter, stat_two: lowercase_converter):
@@ -554,10 +561,20 @@ async def mymoves(ctx: commands.Context):
 
     pages = iterate_moves(moves, playbooks, pages, special)
 
-    pageManager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
+    page_manager = PageManager(f"Name: {char_info[1]}", pages, f"Playbook: {char_info[2]}", char_info[3])
 
-    embed = dc.Embed.from_dict(pageManager.get_embed_dict())
-    await ctx.reply(embed=embed)
+    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+    msg = await ctx.reply(embed=embed)
+
+    await add_arrows(msg)
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST, msg))
+
+            await turn_pages(msg, reaction, user, page_manager)
+        except:
+            break
 
 @bot.command(usage = f"{PREFIX}harminfo")
 async def harminfo(ctx: commands.Context):
@@ -1296,7 +1313,7 @@ async def inventory(ctx: commands.Context):
     embed = dc.Embed.from_dict(page_manager.get_embed_dict())
     await ctx.reply(embed=embed)
 
-@bot.command(usage =f"give <name> <amount> <item> [<amount> <item>]...")
+@bot.command(usage =f"give <name> <amount> <item> [| <amount> <item>]...")
 async def give(ctx: commands.Context, name: str,  *args: str):
     """Gives the named character specified amount of 
     some item. Can specify multiple items at once by 
@@ -1358,11 +1375,133 @@ async def give(ctx: commands.Context, name: str,  *args: str):
         else:
             await ctx.reply(f"{message} Please check both inventories if any item is missing and try again.")
 
-@bot.command()
-async def snow(ctx):
-    """Test command. Should be removed for release"""
-    print('@' + str(ctx.author.name))
-    await ctx.send(content=f'@{ctx.author.name}')
+@bot.command(usage=f"{PREFIX}equip <name>")
+async def equip(ctx: commands.Context, name: str):
+    """Equips or unequips specified item."""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    name = name.capitalize()
+    existing_item = character.check_for_item(name)
+    if not existing_item:
+        await ctx.reply(f"There's no item named {name} in your inventory.")
+        return
+    
+    if existing_item[4] == 0:
+        character.equip((existing_item[2], 1))
+        await ctx.reply(f"{name} equipped successfully.")
+    else:
+        character.equip((existing_item[2], 0))
+        await ctx.reply(f"{name} unequipped successfully.")
+
+@equip.error
+async def equip_error(ctx: commands.Context, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.reply(f"Please specify the item to equip. Example: `{PREFIX}equip \"Handgun\"`")
+
+@bot.command(usage=f"{PREFIX}finaladvance")
+async def finaladvance(ctx: commands.Context):
+    """Will **DELETE** your sheet but will save it's 
+    name, playbook and stats for consulting. It's the 
+    equivalent of getting the 'create a second character to play' 
+    and 'retire your character (to safety)' improvements."""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    if not character.check_if_exists():
+        await ctx.reply("No character found on this server.")
+        return
+    
+    char_name = character.get_character_name()
+    
+    confirmation_bot = await ctx.reply(content=f"_**WARNING:**_ Advancing in this command will wipe your character. You will be able to check it's name, playbook and stat later, but will **NOT** be able to use it. Type '{char_name}' to proceed.")
+
+    try:
+        confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, char_name))
+    except asyncio.TimeoutError:
+        await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+    else:
+        confirmation_bot = await ctx.reply(content=f"Last chance. Type 'Confirm' to continue.")
+
+        try:
+            confirm_message = await bot.wait_for('message', timeout=25.0, check= lambda m: check_confirm_message(m, ctx, "Confirm"))
+        except asyncio.TimeoutError:
+            await confirmation_bot.edit(content='Confirmation timed out. Action canceled.')
+        else:
+            try:
+                character.final_advance()
+                character.delete_character()
+                await ctx.send('Character deleted successfully.')
+            except:
+                await ctx.send('Something went wrong.')
+
+@bot.command(usage=f"{PREFIX}allcharacters")
+async def allcharacters(ctx: commands.Context):
+    """Lists all active characters."""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    characters = character.get_players()
+
+    pages = []
+
+    if len(characters) == 0:
+        pages.append(AllCharacters('No characters found on this server'))
+    else:
+        for i in range(0, len(characters), 20):
+            txt = "\n".join(str(char[0]) for char in characters[i:i+20])
+            pages.append(AllCharacters(txt))
+
+    page_manager = PageManager(f"All Characters", pages)
+
+    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+    msg = await ctx.reply(embed=embed)
+
+    await add_arrows(msg)
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST, msg))
+
+            await turn_pages(msg, reaction, user, page_manager)
+        except:
+            break
+
+@bot.command(usage=f"{PREFIX}retired")
+async def retired(ctx: commands.Context):
+    """Lists all retired characters."""
+
+    character = Character(str(ctx.author.id), str(ctx.guild.id))
+
+    characters = character.get_retired()
+
+    pages = []
+
+    if len(characters) == 0:
+        pages.append(AllCharacters('No retired characters found on this server'))
+    else:
+        for i in range(0, len(characters), 20):
+            txt = "\n".join(f"{char[2]} [{char[3]}] - Stats: {char[4]} / {char[5]} / {char[6]} / {char[7]} / {char[8]}" for char in characters[i:i+20])
+            pages.append(AllCharacters(txt))
+
+    page_manager = PageManager(f"All Characters", pages)
+
+    embed = dc.Embed.from_dict(page_manager.get_embed_dict())
+    msg = await ctx.reply(embed=embed)
+
+    await add_arrows(msg)
+
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout=30.0, check=lambda r, u: check_reaction(r, u, ctx, emojis.ARROWS_LIST, msg))
+
+            await turn_pages(msg, reaction, user, page_manager)
+        except:
+            break
 
 @bot.command(usage=f"{PREFIX}help [command]")
 async def help(ctx: commands.Context, cmd = None):
