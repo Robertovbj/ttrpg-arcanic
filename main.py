@@ -28,7 +28,7 @@ db = Database()
 def lowercase_converter(arg: str) -> str:
     return arg.lower()
 
-@bot.command(usage=f"{PREFIX}checksheet [name]")
+@bot.command(usage=f"{PREFIX}checksheet [name]", aliases=['sheet'])
 async def checksheet(ctx: commands.Context, char: str = None):
     """Check your character's full sheet.
     If a name is passed as argument, will show
@@ -86,7 +86,7 @@ async def checksheet(ctx: commands.Context, char: str = None):
         except:
             break
 
-@bot.command(usage=f"{PREFIX}createsheet <name>")
+@bot.command(usage=f"{PREFIX}createsheet <name>", aliases=['csheet'])
 async def createsheet(ctx: commands.Context, name: str):
     '''Create a new character with the specified name.
     To use two or more names, encase them with quotes.
@@ -207,7 +207,7 @@ async def create_sheet_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f'Please specify your character\'s name. Example: `{PREFIX}createsheet "Will Smith"`')
 
-@bot.command(usage=f"{PREFIX}deletesheet")
+@bot.command(usage=f"{PREFIX}deletesheet", aliases=['dsheet'])
 async def deletesheet(ctx: commands.Context):
     """Delete your character **FOREVER**. 
     Will ask for confirmation to avoid accidents."""
@@ -240,7 +240,7 @@ async def deletesheet(ctx: commands.Context):
             except:
                 await ctx.send('Something went wrong.')
 
-@bot.command(usage=f"{PREFIX}highlight <stat1> <stat2>")
+@bot.command(usage=f"{PREFIX}highlight <stat1> <stat2>", aliases=['hl'])
 async def highlight(ctx: commands.Context, stat_one: lowercase_converter, stat_two: lowercase_converter):
     """Highlights the two specified stats. Must inform both by name.
     
@@ -273,7 +273,7 @@ async def highlight_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f'Please specify both stats to highlight as the following example: `{PREFIX}highlight Cool Weird`')
 
-@bot.command(usage=f"{PREFIX}adjuststats <name> <value> [| <name> <value>]...")
+@bot.command(usage=f"{PREFIX}adjuststats <name> <value> [| <name> <value>]...", aliases=['astats'])
 async def adjuststats(ctx: commands.Context, *args: str):
     """Adjust stats to specified number. Can specify
     multiple stats at once by separating the "stat, value"
@@ -342,7 +342,7 @@ async def image_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f'Please provide a imgur link. Example: `{PREFIX}image https://i.imgur.com/JOf48jt.jpeg`')
 
-@bot.command(usage=f"{PREFIX}resetimage")
+@bot.command(usage=f"{PREFIX}resetimage", aliases=['rimage'])
 async def resetimage(ctx: commands.Context):
     """Resets your character's image. Will ask for confirmation."""
 
@@ -362,7 +362,7 @@ async def resetimage(ctx: commands.Context):
         character.reset_image()
         await ctx.reply("Image reseted to default.")
 
-@bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}addexp <amount>")
+@bot.command(brief = "Adds exp to your character", usage = f"{PREFIX}addexp <amount>", aliases=['xp'])
 async def addexp(ctx: commands.Context, amount):
     """Add specified amount of exp to your character. The amount can
     be negative in case of the need of exp removal.
@@ -577,7 +577,7 @@ async def mymoves(ctx: commands.Context):
         except:
             break
 
-@bot.command(usage = f"{PREFIX}harminfo")
+@bot.command(usage = f"{PREFIX}harminfo", aliases=['charm'])
 async def harminfo(ctx: commands.Context):
     """Shows your character's harms and conditions."""
 
@@ -597,7 +597,7 @@ async def harminfo(ctx: commands.Context):
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     await ctx.reply(embed=embed)
 
-@bot.command(usage = f"{PREFIX}takeharm <amount>")
+@bot.command(usage = f"{PREFIX}takeharm <amount>", aliases=['harm'])
 async def takeharm(ctx: commands.Context, amount):
     """Add specified amount of harm to your character.
     Also calculates and gives you a warning if you're going to die."""
@@ -656,7 +656,7 @@ async def take_harm_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of harm to take. Example: `{PREFIX}takeharm 2`")
 
-@bot.command(usage = f"{PREFIX}takedebility <name>")
+@bot.command(usage = f"{PREFIX}takedebility <name>", aliases=['d'])
 async def takedebility(ctx: commands.Context, name: lowercase_converter):
     """Marks a debility for your character. Remember,
     debilities are **PERMANENT**. Valid options are: 
@@ -700,7 +700,7 @@ async def take_debility_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the debility to take. Example: `{PREFIX}takedebility Crippled`")
 
-@bot.command(usage = f"{PREFIX}healharm <amount>")
+@bot.command(usage = f"{PREFIX}healharm <amount>", aliases=['heal'])
 async def healharm(ctx: commands.Context, amount):
     """Heal specified amount of harm on your character."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
@@ -754,8 +754,8 @@ async def heal_harm_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the amount of harm to heal. Example: `{PREFIX}healharm 2`")
 
-@bot.command(usage = f"{PREFIX}fullheal")
-async def fullheal(ctx: commands.Context):
+@bot.command(usage = f"{PREFIX}noharm")
+async def noharm(ctx: commands.Context):
     """Fully heals your character."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -782,8 +782,8 @@ async def fullheal(ctx: commands.Context):
         else:
             await ctx.reply(f'You\'re now fully healed.')
 
-@bot.command(usage = f"{PREFIX}fullhealc", hidden=True)
-async def fullhealc(ctx: commands.Context):
+@bot.command(usage = f"{PREFIX}fullheal", hidden=True)
+async def fullheal(ctx: commands.Context):
     """Fully heals your character, including debilities."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
 
@@ -825,7 +825,7 @@ async def stabilize(ctx: commands.Context):
     else:
         await ctx.reply('You\'re now "Stabilized".')
 
-@bot.command(usage = f"{PREFIX}hxinfo [name]")
+@bot.command(usage = f"{PREFIX}hxinfo [name]", aliases=['h'])
 async def hxinfo(ctx: commands.Context, name: str = None):
     """Lists all HX info from your character. If a character's name
     is used as argument, it lists only the HX towards that character.
@@ -964,7 +964,7 @@ async def learnmoves(ctx: commands.Context, *args: str):
     else:
         await ctx.reply(message)
 
-@bot.command(usage=f"{PREFIX}removemoves <move> [| <move>]...")
+@bot.command(usage=f"{PREFIX}removemoves <move> [| <move>]...", aliases=['rmoves'])
 async def removemoves(ctx: commands.Context, *args: str):
     """Removes named moves from your sheet. To specify the move to remove,
     use `/moves`, copy it's name and paste it between double quotes.
@@ -1016,7 +1016,7 @@ async def removemoves(ctx: commands.Context, *args: str):
         else:
             await ctx.reply(message)
 
-@bot.command(usage = f"{PREFIX}myimprovements")
+@bot.command(usage = f"{PREFIX}myimprovements", aliases=['myimp'])
 async def myimprovements(ctx: commands.Context):
     """Lists your character's improvements."""
     character = Character(str(ctx.author.id), str(ctx.guild.id))
@@ -1035,7 +1035,7 @@ async def myimprovements(ctx: commands.Context):
     embed = dc.Embed.from_dict(pageManager.get_embed_dict())
     await ctx.reply(embed=embed)
 
-@bot.command(usage = f"{PREFIX}improve <number> [| <number>]...")
+@bot.command(usage = f"{PREFIX}improve <number> [| <number>]...", aliases=['imp'])
 async def improve(ctx: commands.Context, *args: str):
     """Get the specified improvement. Can specify
     multiple improvements at once by separating the "value"
@@ -1099,7 +1099,7 @@ async def improve(ctx: commands.Context, *args: str):
         else:
             await ctx.reply(message)
 
-@bot.command(usage = f"{PREFIX}removeimprovement <number> [| <number>]...")
+@bot.command(usage = f"{PREFIX}removeimprovement <number> [| <number>]...", aliases=['rimp'])
 async def removeimprovement(ctx: commands.Context, *args: str):
     """Remove the specified improvement. Can specify
     multiple improvements at once by separating the "value"
@@ -1204,7 +1204,7 @@ async def additem(ctx: commands.Context, *args: str):
     else:
         await ctx.reply(message)
 
-@bot.command(usage = f"{PREFIX}removeitem <amount> <name> [| <amount> <name>]...")
+@bot.command(usage = f"{PREFIX}removeitem <amount> <name> [| <amount> <name>]...", aliases=['ritem'])
 async def removeitem(ctx: commands.Context, *args: str):
     """Removes items from your inventory. Can specify multiple
     items at once by separating the "amount, name"
@@ -1249,7 +1249,7 @@ async def removeitem(ctx: commands.Context, *args: str):
 
     await ctx.reply(f"Items removed successfully.")
 
-@bot.command(usage = f"{PREFIX}itemdescription <name> <description> [| <name> <description>]...")
+@bot.command(usage = f"{PREFIX}itemdescription <name> <description> [| <name> <description>]...", aliases=['item'])
 async def itemdescription(ctx: commands.Context, *args: str):
     """Edits the description of items on your inventory. 
     Can specify multiple items at once by separating the 
@@ -1300,7 +1300,7 @@ async def itemdescription(ctx: commands.Context, *args: str):
     else:
         await ctx.reply(message)
 
-@bot.command(usage = f"{PREFIX}inventory")
+@bot.command(usage = f"{PREFIX}inventory", aliases=['inv'])
 async def inventory(ctx: commands.Context):
     """Lists your character's the inventory."""
     
@@ -1412,7 +1412,7 @@ async def equip_error(ctx: commands.Context, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f"Please specify the item to equip. Example: `{PREFIX}equip \"Handgun\"`")
 
-@bot.command(usage=f"{PREFIX}finaladvance")
+@bot.command(usage=f"{PREFIX}finaladvance", aliases=['delete'])
 async def finaladvance(ctx: commands.Context):
     """Will **DELETE** your sheet but will save it's 
     name, playbook and stats for consulting. It's the 
@@ -1448,7 +1448,7 @@ async def finaladvance(ctx: commands.Context):
             except:
                 await ctx.send('Something went wrong.')
 
-@bot.command(usage=f"{PREFIX}allcharacters")
+@bot.command(usage=f"{PREFIX}allcharacters", aliases=['char'])
 async def allcharacters(ctx: commands.Context):
     """Lists all active characters."""
 
@@ -1576,6 +1576,8 @@ async def help(ctx: commands.Context, cmd = None):
         else:
             em = dc.Embed(title=f"**{cmd_obj.name}**", description=f"{cmd_obj.help}")
             em.add_field(name="**Syntax**", value=f"`{cmd_obj.usage}`")
+            if cmd_obj.aliases:
+                em.add_field(name="**Aliases**", value=" ".join(f"`{alias}`" for alias in cmd_obj.aliases))
             em.set_footer(text="<> means it's required, [] means it's optional")
             await ctx.send(embed=em)
 
